@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.Core", "DotMatrix
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DotMatrix.Cli", "DotMatrix.Cli", "{FFAB11B2-EDA2-4600-95B5-D9A834B426E0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.Cli", "DotMatrix.Cli\DotMatrix.Cli.csproj", "{504F3E04-B50E-4D13-9E5A-C68BE3BCD8B5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,5 +22,9 @@ Global
 		{C2C9D697-F78C-4537-A7FB-804B79D2B852}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2C9D697-F78C-4537-A7FB-804B79D2B852}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2C9D697-F78C-4537-A7FB-804B79D2B852}.Release|Any CPU.Build.0 = Release|Any CPU
+		{504F3E04-B50E-4D13-9E5A-C68BE3BCD8B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{504F3E04-B50E-4D13-9E5A-C68BE3BCD8B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{504F3E04-B50E-4D13-9E5A-C68BE3BCD8B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{504F3E04-B50E-4D13-9E5A-C68BE3BCD8B5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
