@@ -1,6 +1,6 @@
 ﻿namespace DotMatrix.Core;
 
-public class GameBoyDisplay : IGameBoyDisplay
+public class Display : IGameBoyDisplay
 {
     public NewFrameDelegate OnNewFrame { get; }
 
@@ -10,7 +10,7 @@ public class GameBoyDisplay : IGameBoyDisplay
      */
     private byte[] _displayData = new byte[GameBoySpecs.DisplaySize.Y * GameBoySpecs.DisplaySize.X / 2];
 
-    public GameBoyDisplay(NewFrameDelegate onNewFrame)
+    public Display(NewFrameDelegate onNewFrame)
     {
         OnNewFrame = onNewFrame;
     }
