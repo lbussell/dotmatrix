@@ -1,2 +1,2 @@
-﻿using var game = new DotMatrix.MonoGame.Game1();
+﻿using var game = new DotMatrix.MonoGame.DotMatrixGame();
 game.Run();

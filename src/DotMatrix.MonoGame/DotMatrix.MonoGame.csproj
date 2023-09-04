@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+    <!-- Begin: Added by MonoGame -->
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net7.0</TargetFramework>
@@ -26,6 +27,7 @@
         <Message Text="Restoring dotnet tools" Importance="High"/>
         <Exec Command="dotnet tool restore"/>
     </Target>
+    <!-- End: Added by MonoGame-->
 
     <PropertyGroup>
         <CodeAnalysisRuleSet>..\StyleCopAnalyzers.ruleset</CodeAnalysisRuleSet>
@@ -33,5 +35,9 @@
 
     <ItemGroup>
         <AdditionalFiles Include="../stylecop.json" Link="stylecop.json"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="../DotMatrix.Core/DotMatrix.Core.csproj" />
     </ItemGroup>
 </Project>

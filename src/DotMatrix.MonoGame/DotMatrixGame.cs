@@ -1,31 +1,46 @@
-﻿using Microsoft.Xna.Framework;
+﻿namespace DotMatrix.MonoGame;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using DotMatrix.Core;
 
-namespace DotMatrix.MonoGame;
-
-public class Game1 : Game
+public class DotMatrixGame : Game
 {
-    private GraphicsDeviceManager _graphics;
-    private SpriteBatch _spriteBatch;
+    private int _displayScale = 4;
+    private Vec2Int _displaySize;
 
-    public Game1()
+    private readonly GraphicsDeviceManager _graphics;
+    private Texture2D _displayTexture;
+
+    // private SpriteBatch _spriteBatch;
+
+    public DotMatrixGame()
     {
-        _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
+
+        _displaySize = GameBoySpecs.DisplaySize * _displayScale;
+        _graphics = new GraphicsDeviceManager(this);
+
+        _displayTexture = new Texture2D(
+            _graphics.GraphicsDevice,
+            GameBoySpecs.DisplaySize.Width,
+            GameBoySpecs.DisplaySize.Height
+        );
     }
 
     protected override void Initialize()
     {
-        // TODO: Add your initialization logic here
+        _graphics.PreferredBackBufferHeight = _displaySize.Height;
+        _graphics.PreferredBackBufferWidth = _displaySize.Width;
 
         base.Initialize();
     }
 
     protected override void LoadContent()
     {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
+        // _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         // TODO: use this.Content to load your game content here
     }
