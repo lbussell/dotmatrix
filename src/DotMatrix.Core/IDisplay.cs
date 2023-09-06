@@ -4,7 +4,7 @@ namespace DotMatrix.Core;
 
 public delegate void NewFrameDelegate(byte[] frameData);
 
-public interface IGameBoyDisplay
+public interface IDisplay
 {
     public NewFrameDelegate OnNewFrame { get; }
     public void SetPixel();

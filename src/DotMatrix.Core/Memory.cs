@@ -1,44 +1,51 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace DotMatrix.Core;
 
+public readonly record struct MemoryRegion(ushort Start, ushort End)
+{
+    public bool Contains(ushort addr) => Start <= addr && addr <= End;
+};
+
 public class Memory
 {
-    public static (ushort Start, ushort End) RomBank00 => (0x0000, 0x3FFF);
-    public static (ushort Start, ushort End) RomBank01NN => (0x4000, 0x7FFF);
-    public static (ushort Start, ushort End) VRam => (0x8000, 0x9FFF);
-    public static (ushort Start, ushort End) ExtRam => (0xA000, 0xBFFF);
-    public static (ushort Start, ushort End) WorkRam => (0xC000, 0xCFFF);
-    public static (ushort Start, ushort End) WorkRam2 => (0xD000, 0xDFFF);
-    public static (ushort Start, ushort End) EchoRam => (0xE000, 0xFDFF);
-    public static (ushort Start, ushort End) OAM => (0xFE00, 0xFE9F);
-    public static (ushort Start, ushort End) Prohibited => (0xFEA0, 0xFEFF);
-    public static (ushort Start, ushort End) IOReg => (0xFF00, 0xFEFF);
-    public static (ushort Start, ushort End) HRam => (0xFF80, 0xFFFE);
-    public static (ushort Start, ushort End) IEReg => (0xFFFF, 0xFFFF);
+    public static MemoryRegion RomBank00 => new(0x0000, 0x3FFF);
+    public static MemoryRegion RomBank01NN => new(0x4000, 0x7FFF);
+    public static MemoryRegion VRam => new(0x8000, 0x9FFF);
+    public static MemoryRegion ExtRam => new(0xA000, 0xBFFF);
+    public static MemoryRegion WorkRam => new(0xC000, 0xCFFF);
+    public static MemoryRegion WorkRam2 => new(0xD000, 0xDFFF);
+    // Echo is a mirror of C000-DDFF but should not be written to.
+    public static MemoryRegion EchoRam => new(0xE000, 0xFDFF);
+    public static MemoryRegion OAM => new(0xFE00, 0xFE9F);
+    public static MemoryRegion Prohibited => new(0xFEA0, 0xFEFF);
+    public static MemoryRegion IOReg => new(0xFF00, 0xFEFF);
+    public static MemoryRegion HRam => new(0xFF80, 0xFFFE);
+    public static MemoryRegion IEReg => new(0xFFFF, 0xFFFF);
 
-    private byte[] _memory = new byte[0xFFFF];
-    // private Memory<byte> _memory = new(new byte[0xFFFF]);
+    private readonly byte[] _memory = new byte[0xFFFF];
+    private readonly byte[] _cartridge = new byte[0x200000];
 
     public Memory()
     {
-
     }
 
-    // public void LoadCartridge(byte[] cartridgeData)
-    public void LoadCartridge(ReadOnlySpan<byte> cartridgeData)
+    public void Write(ushort addr, byte data)
     {
-        if (cartridgeData.Length > RomBank01NN.End)
+        // Don't allow writing to ROM or Prohibited area.
+        if (addr <= RomBank01NN.End || Prohibited.Contains(addr))
         {
-            cartridgeData = cartridgeData.Slice(RomBank00.Start, RomBank01NN.End - RomBank00.Start);
+            throw new AddressException(addr);
         }
 
-        cartridgeData.CopyTo(_memory.AsSpan());
+        _memory[addr] = data;
 
-        // Debug: Print boot ROM
-        for (int i = 0; i < 256; i += 2)
+        // Echo RAM is mirrored with the start of Work RAM.
+        if (EchoRam.Contains(addr))
         {
-            PrintShort(i);
+            // EchoRam.Start - WorkRam.Start = 0x2000
+            Write((ushort)(addr - 0x2000), data);
         }
     }
 
@@ -48,5 +55,5 @@ public class Memory
     private void PrintByte(int index) =>
         Console.WriteLine(ByteToString(_memory[index]));
 
-    private static string ByteToString(byte b) => b.ToString("X2");
+    public static string ByteToString(byte b) => b.ToString("X2");
 }

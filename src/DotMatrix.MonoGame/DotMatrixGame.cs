@@ -20,13 +20,13 @@ public class DotMatrixGame : Game
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
 
-        _displaySize = GameBoySpecs.DisplaySize * _displayScale;
+        _displaySize = DotMatrixConsoleSpecs.DisplaySize * _displayScale;
         _graphics = new GraphicsDeviceManager(this);
 
         _displayTexture = new Texture2D(
             _graphics.GraphicsDevice,
-            GameBoySpecs.DisplaySize.Width,
-            GameBoySpecs.DisplaySize.Height
+            DotMatrixConsoleSpecs.DisplaySize.Width,
+            DotMatrixConsoleSpecs.DisplaySize.Height
         );
     }
 
