@@ -2,8 +2,8 @@ namespace DotMatrix.Core;
 
 public class Cartridge
 {
-    private static readonly MemoryRegion TitleRegion = new(0x0134, 0x0143);
-    private static readonly MemoryRegion RomSize = new(0x0148, 0x0148);
+    private static readonly (ushort start, ushort end) TitleRegion = (0x0134, 0x0143);
+    private static readonly (ushort start, ushort end) RomSize = (0x0148, 0x0148);
 
     public string Title { get; init; }
     public int SizeInBytes { get; init; }
@@ -33,7 +33,7 @@ public class Cartridge
 
     private static (int sizeInBytes, int numBanks) DecodeSize(byte[] data)
     {
-        byte value = data[RomSize.Start];
+        byte value = data[RomSize.start];
         int sizeInBytes = 32 * 1024 * (1 << value);
         int numBanks = (int) Math.Pow(2, value + 1);
         return (sizeInBytes, numBanks);
@@ -43,6 +43,6 @@ public class Cartridge
     {
         // TODO: Account for manufacturer codes:
         // https://gbdev.io/pandocs/The_Cartridge_Header.html#013f-0142--manufacturer-code
-        return System.Text.Encoding.ASCII.GetString(data, TitleRegion.Start, TitleRegion.End);
+        return System.Text.Encoding.ASCII.GetString(data, TitleRegion.start, TitleRegion.end);
     }
 }
