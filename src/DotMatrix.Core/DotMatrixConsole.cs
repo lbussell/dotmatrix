@@ -1,5 +1,5 @@
 namespace DotMatrix.Core;
 
-public class DotMatrixConsole
+public sealed class DotMatrixConsole
 {
 }

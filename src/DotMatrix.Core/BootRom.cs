@@ -1,6 +1,6 @@
 namespace DotMatrix.Core;
 
-public class BootRom
+public sealed class BootRom
 {
     public const int SizeInBytes = 0x0100;
 

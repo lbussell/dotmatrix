@@ -1,11 +1,12 @@
 namespace DotMatrix.Core;
 
-public class Cartridge
+public sealed class Cartridge
 {
     private static readonly (ushort start, ushort end) TitleRegion = (0x0134, 0x0143);
     private static readonly (ushort start, ushort end) RomSize = (0x0148, 0x0148);
 
     public string Title { get; init; }
+
     public int SizeInBytes { get; init; }
 
     private readonly byte[] _data;

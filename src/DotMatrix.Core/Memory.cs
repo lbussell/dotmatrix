@@ -1,6 +1,6 @@
 namespace DotMatrix.Core;
 
-public class Memory
+public sealed class Memory
 {
     private readonly byte[] _memory = new byte[0xFFFF];
 

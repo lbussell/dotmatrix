@@ -1,6 +1,6 @@
 namespace DotMatrix.Core;
 
-public class Bus
+public sealed class Bus
 {
     private readonly Cartridge _cartridge;
     private readonly Memory _memory;
