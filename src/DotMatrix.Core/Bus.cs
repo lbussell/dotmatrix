@@ -27,4 +27,14 @@ public sealed class Bus
             };
         set => throw new NotImplementedException();
     }
+
+    public byte ReadInc8(ref ushort addr)
+    {
+        return this[addr++];
+    }
+
+    public ushort ReadInc16(ref ushort addr)
+    {
+        return (ushort)(this[addr++] | this[addr++] << 8);
+    }
 }

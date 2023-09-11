@@ -1,24 +1,18 @@
 namespace DotMatrix.Core;
 
-public sealed class Cpu
+using System.Reflection;
+using DotMatrix.Core.Opcodes;
+
+public sealed class Cpu(Bus bus, IDisplay display)
 {
     private const int CyclesPerFrame = DotMatrixConsoleSpecs.CpuSpeed / DotMatrixConsoleSpecs.FramesPerSecond;
 
-    private Bus _bus;
-    private IDisplay _display;
-    private CpuState _cpuState = default(CpuState);
+    private readonly Dictionary<byte, IInstruction> _instructions = RegisterOpcodes();
+    private CpuState _cpuState;
     private int _cyclesSinceLastFrame = 0;
+    private IInstruction _notImplementedInstruction = new NotImplemented();
 
-    public Cpu(Bus bus, IDisplay display)
-    {
-        _bus = bus;
-        _display = display;
-    }
-
-    /**
-     * Overall number of Cycles since the CPU was started.
-     */
-    public long Cycles { get; set; } = 0;
+    public long Cycles { get; private set; } = 0;
 
     public void ExecuteFrame(int cycles = CyclesPerFrame)
     {
@@ -32,24 +26,53 @@ public sealed class Cpu
 
         /* Read inputs */
 
-        _display.RequestRefresh();
+        display.RequestRefresh();
 
         _cyclesSinceLastFrame %= CyclesPerFrame;
     }
 
-    public int ExecuteCycle()
+    private int ExecuteCycle()
     {
-        Console.WriteLine(_cpuState);
+        byte opcode = bus.ReadInc8(ref _cpuState.PC);
+        CpuUtil.Print(opcode);
 
-        ushort instruction = (ushort)((ushort)(_bus[_cpuState.PC] << 8) | _bus[(ushort)(_cpuState.PC + 1)]);
-        Print(instruction);
-        _cpuState.PC += DotMatrixConsoleSpecs.InstructionSizeInBytes;
+        IInstruction instruction = _instructions.GetValueOrDefault(opcode) ?? _notImplementedInstruction;
+        _cpuState = instruction.Execute(_cpuState, bus);
+        CpuUtil.Print(_cpuState);
 
-        // TODO: A cycle will not always be 4 T-cycles
-        return 4;
+        return instruction.TCycles;
     }
 
-    private static void Print(ushort n) => Console.WriteLine(n.ToString("X4"));
+    private static Dictionary<byte, IInstruction> RegisterOpcodes()
+    {
+        Dictionary<byte, IInstruction> instructions = new();
 
-    private static void Print(byte b) => Console.WriteLine(b.ToString("X2"));
+        foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
+        {
+            IEnumerable<Attribute> attributes = type.GetCustomAttributes(typeof(OpcodeAttribute));
+            foreach (Attribute attribute in attributes)
+            {
+                OpcodeAttribute opcodeAttribute = (OpcodeAttribute)attribute;
+                IInstruction instruction = opcodeAttribute.R != CpuRegister.Implied
+                    ? (IInstruction)Activator.CreateInstance(type, opcodeAttribute.R)!
+                    : (IInstruction)Activator.CreateInstance(type)!;
+
+                instructions[opcodeAttribute.Opcode] = instruction;
+                Console.WriteLine($"Registered opcode 0x{opcodeAttribute.Opcode:X2}: {instruction.Name}");
+            }
+
+            // OpcodeAttribute? opcodeAttribute = type.GetCustomAttribute<OpcodeAttribute>();
+            // if (opcodeAttribute == null)
+            // {
+            //     continue;
+            // }
+
+            // IInstruction instruction = (IInstruction)Activator.CreateInstance(type)!;
+            // instructions[opcodeAttribute.Opcode] = instruction;
+            //
+            // Console.WriteLine($"Registered opcode 0x{opcodeAttribute.Opcode:X2}: {instruction.Name}");
+        }
+
+        return instructions;
+    }
 }
