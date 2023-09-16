@@ -1,6 +1,7 @@
 namespace DotMatrix.Core;
 
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using DotMatrix.Core.Opcodes;
 
 public sealed class Cpu(Bus bus, IDisplay display)
@@ -11,6 +12,8 @@ public sealed class Cpu(Bus bus, IDisplay display)
     private CpuState _cpuState;
     private int _cyclesSinceLastFrame = 0;
     private IInstruction _notImplementedInstruction = new NotImplemented();
+
+    public CpuState CpuState => _cpuState;
 
     public long Cycles { get; private set; } = 0;
 

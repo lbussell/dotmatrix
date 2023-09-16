@@ -2,11 +2,11 @@ namespace DotMatrix.Core;
 
 public sealed class Bus
 {
-    private readonly Cartridge _cartridge;
+    private readonly Cartridge? _cartridge;
     private readonly Memory _memory;
     private readonly BootRom? _bootRom;
 
-    public Bus(Memory memory, Cartridge cartridge, BootRom? bootRom)
+    public Bus(Memory memory, Cartridge? cartridge, BootRom? bootRom)
     {
         _memory = memory;
         _cartridge = cartridge;

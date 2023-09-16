@@ -14,5 +14,4 @@
     <ItemGroup>
       <ProjectReference Include="..\DotMatrix.Core\DotMatrix.Core.csproj" />
     </ItemGroup>
-
 </Project>
