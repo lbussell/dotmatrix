@@ -25,9 +25,7 @@ public sealed class Cpu(Bus bus, IDisplay display)
         }
 
         /* Read inputs */
-
         display.RequestRefresh();
-
         _cyclesSinceLastFrame %= CyclesPerFrame;
     }
 
@@ -60,17 +58,6 @@ public sealed class Cpu(Bus bus, IDisplay display)
                 instructions[opcodeAttribute.Opcode] = instruction;
                 Console.WriteLine($"Registered opcode 0x{opcodeAttribute.Opcode:X2}: {instruction.Name}");
             }
-
-            // OpcodeAttribute? opcodeAttribute = type.GetCustomAttribute<OpcodeAttribute>();
-            // if (opcodeAttribute == null)
-            // {
-            //     continue;
-            // }
-
-            // IInstruction instruction = (IInstruction)Activator.CreateInstance(type)!;
-            // instructions[opcodeAttribute.Opcode] = instruction;
-            //
-            // Console.WriteLine($"Registered opcode 0x{opcodeAttribute.Opcode:X2}: {instruction.Name}");
         }
 
         return instructions;
