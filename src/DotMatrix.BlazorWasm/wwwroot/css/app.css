@@ -102,6 +102,10 @@ canvas {
     border: 1px solid black;
 }
 
-#dbg-section * {
-    border: 1px solid gray;
+/*#dbg-section * {*/
+/*    border: 1px solid gray;*/
+/*}*/
+
+table {
+    font-family: monospace;
 }

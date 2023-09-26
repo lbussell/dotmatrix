@@ -22,7 +22,7 @@ public sealed class Bus
         get =>
             addr switch
             {
-                _ when BootRomIsAttached && addr < MemoryRegion.BootRomEnd => _bootRom![addr],
+                _ when BootRomIsAttached && addr < MemoryRegion.BootRomEnd => _bootRom!.Read8(addr),
                 _ => _memory[addr],
             };
         set => throw new NotImplementedException();

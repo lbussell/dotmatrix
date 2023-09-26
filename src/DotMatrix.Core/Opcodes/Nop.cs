@@ -1,13 +1,15 @@
 namespace DotMatrix.Core.Opcodes;
 
 [Opcode(0x00)]
-public class Nop : IInstruction
+public class Nop : IOpcode
 {
     public string Name => "NOP";
 
     public int TCycles => 4;
 
-    public CpuState Execute(CpuState cpuState, Bus bus)
+    public ReadType ReadType => ReadType.None;
+
+    public CpuState Execute(CpuState cpuState, ushort? arg)
     {
         return cpuState;
     }

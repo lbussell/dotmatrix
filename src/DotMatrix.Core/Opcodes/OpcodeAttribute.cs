@@ -8,4 +8,6 @@ internal sealed class OpcodeAttribute(byte opcode) : Attribute
     public byte Prefix { get; init; } = 0;
 
     public CpuRegister R { get; init; } = CpuRegister.Implied;
+
+    public CpuRegister R2 { get; init; } = CpuRegister.Implied;
 }

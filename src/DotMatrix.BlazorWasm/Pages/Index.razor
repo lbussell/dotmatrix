@@ -2,11 +2,10 @@
 
 @using System
 @using DotMatrix.Core
-@using DotMatrix.BlazorWasm.Components
 
 <PageTitle>Index</PageTitle>
 
-<InputFile OnChange="@LoadFiles" />
+<InputFile OnChange="@LoadFile" />
 
 <div id="dbg-section">
     <div class="row">
@@ -24,10 +23,7 @@
         </div>
 
         <div class="col-lg-2">
-            Registers
-            <div id="registers">
-                <CpuStateRenderer cpuState="@cpu?.CpuState"/>
-            </div>
+            <Registers cpuState="@cpuState"/>
         </div>
 
         <div class="col-lg-2">
@@ -51,53 +47,41 @@
 </div>
 
 @code {
-    Cpu? cpu;
+    int updates = 0;
+    CpuState cpuState = new();
 
-    private async void LoadFiles(InputFileChangeEventArgs e)
+    private async void LoadFile(InputFileChangeEventArgs e)
     {
         IBrowserFile file = e.File;
-        byte[] data = new byte[e.File.Size];
         Console.WriteLine(e.File.Size);
 
-        if (file != null)
-        {
-            Stream stream = file.OpenReadStream();
-            using (MemoryStream memoryStream = new())
-            {
-                await stream.CopyToAsync(memoryStream);
-                data = memoryStream.ToArray();
-            }
-        }
+        Stream stream = file.OpenReadStream();
+        using MemoryStream memoryStream = new();
+        await stream.CopyToAsync(memoryStream);
+        byte[] data = memoryStream.ToArray();
+
         RunTest(data);
     }
 
-    private static byte[] ReadFromStream(Stream fileStream)
+    private void OnCpuStateChanged(object? sender, CpuState newState)
     {
-        using (MemoryStream memoryStream = new())
-        {
-            fileStream.CopyTo(memoryStream);
-            return memoryStream.ToArray();
-        }
+        updates = updates + 1;
+        cpuState = newState;
+        StateHasChanged();
     }
 
-    public void RunTest(byte[] bootRomData)
+    private void RunTest(byte[] bootRomData)
     {
         Console.WriteLine($"Loading Boot ROM from {nameof(bootRomData)}");
         BootRom bootRom = new(bootRomData);
 
-        @* Console.WriteLine($"Loading ROM from {args[1]}");
-        Cartridge cartridge = new(File.ReadAllBytes(args[1])); *@
-
         Memory memory = new();
         Bus bus = new(memory, cartridge: null, bootRom);
         IDisplay display = new NoDisplay();
-        cpu = new(bus, display);
+        Cpu cpu = new(bus, display);
 
-        // for (int i = 0; i < MemoryRegion.BootRomEnd / DotMatrixConsoleSpecs.InstructionSizeInBytes; i += 1)
-        // {
-        //     cpu.ExecuteCycle();
-        // }
+        cpu.CpuStateChanged += OnCpuStateChanged;
 
-        cpu.ExecuteFrame(MemoryRegion.BootRomEnd * DotMatrixConsoleSpecs.InstructionSizeInBytes);
+        cpu.ExecuteFrame(MemoryRegion.BootRomEnd * ConsoleSpecs.InstructionSizeInBytes);
     }
 }

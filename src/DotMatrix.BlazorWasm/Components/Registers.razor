@@ -1,0 +1,31 @@
+@using DotMatrix.Core
+
+<div id="registers">
+    <table class="table table-sm">
+        <thead>
+        <tr>
+            <th scope="col">Reg</th>
+            <th scope="col">Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        @RegisterRow(("AF", cpuState.AF))
+        @RegisterRow(("BC", cpuState.BC))
+        @RegisterRow(("DE", cpuState.DE))
+        @RegisterRow(("HL", cpuState.HL))
+        @RegisterRow(("SP", cpuState.SP))
+        @RegisterRow(("PC", cpuState.PC))
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter]
+    public required CpuState cpuState { get; set; }
+
+    private static RenderFragment<(string name, ushort value)> RegisterRow = ctx =>
+        @<tr>
+            <td>@ctx.name</td>
+            <td>@ctx.value.ToString("X2")</td>
+        </tr>;
+}

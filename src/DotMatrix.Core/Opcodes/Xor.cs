@@ -7,20 +7,20 @@ namespace DotMatrix.Core.Opcodes;
 [Opcode(0xAC, R = CpuRegister.H)]
 [Opcode(0xAD, R = CpuRegister.L)]
 [Opcode(0xAF, R = CpuRegister.A)]
-internal sealed class XOR(CpuRegister r) : IInstruction
+internal sealed class Xor(CpuRegister r) : IOpcode
 {
-    public string Name => $"{nameof(XOR)} A,{Enum.GetName(typeof(CpuRegister), r)}";
+    public string Name => $"XOR A,{Enum.GetName(typeof(CpuRegister), r)}";
 
     public int TCycles => 4;
 
-    public CpuState Execute(CpuState cpuState, Bus bus)
+    public ReadType ReadType => ReadType.None;
+
+    public CpuState Execute(CpuState cpuState, ushort? arg)
     {
-        byte result = (byte)(CpuUtil.GetHi(cpuState.AF) ^ CpuUtil.GetRegister(cpuState, r));
+        byte result = (byte)(cpuState.A ^ cpuState[r]);
 
         // TODO: make setting flags better...
         byte flags = (byte)(result == 0 ? 0b10000000 : 0x00);
-
-        ushort af = (byte)(CpuUtil.SetHi(cpuState.AF, result) | flags);
-        return cpuState with { AF = af };
+        return cpuState with { A = result, F = flags };
     }
 }

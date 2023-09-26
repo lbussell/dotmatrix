@@ -6,12 +6,13 @@ using DotMatrix.Core.Opcodes;
 
 public sealed class Cpu(Bus bus, IDisplay display)
 {
-    private const int CyclesPerFrame = DotMatrixConsoleSpecs.CpuSpeed / DotMatrixConsoleSpecs.FramesPerSecond;
+    private const int CyclesPerFrame = ConsoleSpecs.CpuSpeed / ConsoleSpecs.FramesPerSecond;
 
-    private readonly Dictionary<byte, IInstruction> _instructions = RegisterOpcodes();
+    private readonly IOpcode _notImplementedInstruction = new NotImplemented();
     private CpuState _cpuState;
     private int _cyclesSinceLastFrame = 0;
-    private IInstruction _notImplementedInstruction = new NotImplemented();
+
+    public event EventHandler<CpuState>? CpuStateChanged;
 
     public CpuState CpuState => _cpuState;
 
@@ -22,6 +23,7 @@ public sealed class Cpu(Bus bus, IDisplay display)
         while (_cyclesSinceLastFrame < cycles)
         {
             int elapsedCycles = ExecuteCycle();
+            OnCpuStateChanged();
             /* Tick PPU/APU with elapsedCycles here */
             _cyclesSinceLastFrame += elapsedCycles;
             Cycles += elapsedCycles;
@@ -35,34 +37,16 @@ public sealed class Cpu(Bus bus, IDisplay display)
     private int ExecuteCycle()
     {
         byte opcode = bus.ReadInc8(ref _cpuState.PC);
-        CpuUtil.Print(opcode);
 
-        IInstruction instruction = _instructions.GetValueOrDefault(opcode) ?? _notImplementedInstruction;
-        _cpuState = instruction.Execute(_cpuState, bus);
-        CpuUtil.Print(_cpuState);
+        // CpuUtil.Print(opcode);
 
-        return instruction.TCycles;
+        // IOpcode instruction = _instructions.GetValueOrDefault(opcode) ?? _notImplementedInstruction;
+        // _cpuState = instruction.Execute(_cpuState, bus);
+        // CpuUtil.Print(_cpuState);
+        //
+        // return instruction.TCycles;
+        return 0;
     }
 
-    private static Dictionary<byte, IInstruction> RegisterOpcodes()
-    {
-        Dictionary<byte, IInstruction> instructions = new();
-
-        foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
-        {
-            IEnumerable<Attribute> attributes = type.GetCustomAttributes(typeof(OpcodeAttribute));
-            foreach (Attribute attribute in attributes)
-            {
-                OpcodeAttribute opcodeAttribute = (OpcodeAttribute)attribute;
-                IInstruction instruction = opcodeAttribute.R != CpuRegister.Implied
-                    ? (IInstruction)Activator.CreateInstance(type, opcodeAttribute.R)!
-                    : (IInstruction)Activator.CreateInstance(type)!;
-
-                instructions[opcodeAttribute.Opcode] = instruction;
-                Console.WriteLine($"Registered opcode 0x{opcodeAttribute.Opcode:X2}: {instruction.Name}");
-            }
-        }
-
-        return instructions;
-    }
+    private void OnCpuStateChanged() => CpuStateChanged?.Invoke(this, _cpuState);
 }

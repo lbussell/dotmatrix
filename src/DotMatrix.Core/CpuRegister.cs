@@ -8,12 +8,22 @@ public enum CpuRegister
      */
     Implied,
 
+    AF,
     A,
     F,
+
+    BC,
     B,
     C,
+
+    DE,
     D,
     E,
+
+    HL,
     H,
     L,
+
+    SP,
+    PC,
 }

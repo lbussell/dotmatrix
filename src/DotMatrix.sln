@@ -5,8 +5,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.MonoGame", "DotMa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.Core", "DotMatrix.Core\DotMatrix.Core.csproj", "{C2C9D697-F78C-4537-A7FB-804B79D2B852}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DotMatrix.Cli", "DotMatrix.Cli", "{FFAB11B2-EDA2-4600-95B5-D9A834B426E0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.Cli", "DotMatrix.Cli\DotMatrix.Cli.csproj", "{504F3E04-B50E-4D13-9E5A-C68BE3BCD8B5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.BlazorWasm", "DotMatrix.BlazorWasm\DotMatrix.BlazorWasm.csproj", "{9D9F8CCC-3091-4408-8786-EE77363F50A7}"
