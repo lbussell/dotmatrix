@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace DotMatrix.Core;
 
 using System.Reflection;
@@ -9,6 +11,8 @@ public class Disassembler
 
     public IEnumerable<Instruction> Disassemble(IReadableMemory rom)
     {
+        PrintOpcodeTable(_opcodes);
+
         for (ushort addr = 0; addr < rom.Length;)
         {
             byte opcodeByte = rom.Read8(addr);
@@ -27,6 +31,55 @@ public class Disassembler
                 _ => throw new NotSupportedException($"Opcode {opcode.Name} ReadType {opcode.ReadType} not supported."),
             };
             yield return instruction;
+        }
+    }
+
+    private static void PrintOpcodeTable(Dictionary<byte, IOpcode> opcodes)
+    {
+        int cellWidth = 8;
+        char vLine = '\u2502';
+        char hLine = '\u2500';
+        char cross = '\u253c';
+
+        for (int y = -0x10; y <= 0xF8; y += 0x08)
+        {
+            StringBuilder line = new();
+
+            if (y == -0x10)
+            {
+                line.Append(string.Empty.PadLeft(cellWidth));
+            }
+
+            bool isHorizontalLine = (y & 0x0F) == 0x08;
+
+            for (int x = -0x1; x <= 0xF; x += 0x1)
+            {
+                if (isHorizontalLine)
+                {
+                    line.Append(new string(hLine, cellWidth) + (x == 0xF ? string.Empty : cross));
+                }
+                else if (y == -0x10 && x == -0x01)
+                {
+                }
+                else if (y == -0x10)
+                {
+                    line.Append($"{vLine}   +{x:X1}   ");
+                }
+                else if (x == -0x1)
+                {
+                    line.Append($"{y:X2}+ ".PadLeft(cellWidth));
+                }
+                else
+                {
+                    string op = opcodes.TryGetValue((byte)(x | y), out IOpcode _)
+                        ? "   YY   "
+                        : "        ";
+                    line.Append($"|{op}");
+                }
+            }
+
+            line.Append('|');
+            Console.WriteLine(line.ToString());
         }
     }
 
@@ -63,25 +116,6 @@ public class Disassembler
                 }
             }
         }
-
-        for (int y = 0; y <= 0xF0; y += 0x10)
-        {
-            Console.WriteLine("\n------------------------------------");
-            for (int x = 0; x <= 0xF; x += 1)
-            {
-                // string op = (x | y).ToString("X2");
-
-                string op = instructions.TryGetValue((byte)(x | y), out IOpcode _)
-                    ? "✅ "
-                    : "❌ ";
-
-                Console.Write($"| {op} ");
-            }
-
-            Console.Write("|");
-        }
-
-        Console.WriteLine("\n------------------------------------");
 
         return instructions;
     }
