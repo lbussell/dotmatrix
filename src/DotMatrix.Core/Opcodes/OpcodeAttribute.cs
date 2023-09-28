@@ -3,11 +3,21 @@ namespace DotMatrix.Core.Opcodes;
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
 internal sealed class OpcodeAttribute(byte opcode) : Attribute
 {
-    public byte Opcode { get; } = opcode;
+    public OpcodeAttribute(byte opcode, CpuRegister r)
+        : this(opcode)
+    {
+        R = r;
+    }
 
-    public byte Prefix { get; init; } = 0;
+    public OpcodeAttribute(byte opcode, CpuRegister r, CpuRegister r2)
+        : this(opcode, r)
+    {
+        R2 = r;
+    }
 
-    public CpuRegister R { get; init; } = CpuRegister.Implied;
+    public byte Opcode => opcode;
 
-    public CpuRegister R2 { get; init; } = CpuRegister.Implied;
+    public CpuRegister R { get; }
+
+    public CpuRegister R2 { get; }
 }

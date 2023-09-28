@@ -1,12 +1,12 @@
 namespace DotMatrix.Core.Opcodes;
 
-[Opcode(0xA8, R = CpuRegister.B)]
-[Opcode(0xA9, R = CpuRegister.C)]
-[Opcode(0xAA, R = CpuRegister.D)]
-[Opcode(0xAB, R = CpuRegister.E)]
-[Opcode(0xAC, R = CpuRegister.H)]
-[Opcode(0xAD, R = CpuRegister.L)]
-[Opcode(0xAF, R = CpuRegister.A)]
+[Opcode(0xA8, CpuRegister.B)]
+[Opcode(0xA9, CpuRegister.C)]
+[Opcode(0xAA, CpuRegister.D)]
+[Opcode(0xAB, CpuRegister.E)]
+[Opcode(0xAC, CpuRegister.H)]
+[Opcode(0xAD, CpuRegister.L)]
+[Opcode(0xAF, CpuRegister.A)]
 internal sealed class Xor(CpuRegister r) : IOpcode
 {
     public string Name => $"XOR A,{Enum.GetName(typeof(CpuRegister), r)}";

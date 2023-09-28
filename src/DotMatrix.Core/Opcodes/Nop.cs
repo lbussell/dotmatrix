@@ -8,9 +8,4 @@ public class Nop : IOpcode
     public int TCycles => 4;
 
     public ReadType ReadType => ReadType.None;
-
-    public CpuState Execute(CpuState cpuState, ushort? arg)
-    {
-        return cpuState;
-    }
 }

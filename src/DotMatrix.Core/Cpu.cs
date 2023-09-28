@@ -36,16 +36,7 @@ public sealed class Cpu(Bus bus, IDisplay display)
 
     private int ExecuteCycle()
     {
-        byte opcode = bus.ReadInc8(ref _cpuState.PC);
-
-        // CpuUtil.Print(opcode);
-
-        // IOpcode instruction = _instructions.GetValueOrDefault(opcode) ?? _notImplementedInstruction;
-        // _cpuState = instruction.Execute(_cpuState, bus);
-        // CpuUtil.Print(_cpuState);
-        //
-        // return instruction.TCycles;
-        return 0;
+        throw new NotImplementedException("CPU is not implemented yet.");
     }
 
     private void OnCpuStateChanged() => CpuStateChanged?.Invoke(this, _cpuState);

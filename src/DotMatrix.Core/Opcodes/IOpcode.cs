@@ -7,6 +7,4 @@ public interface IOpcode
     public int TCycles { get; }
 
     public ReadType ReadType { get; }
-
-    public CpuState Execute(CpuState cpuState, ushort? arg);
 }

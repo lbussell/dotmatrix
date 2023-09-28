@@ -1,9 +1,9 @@
 namespace DotMatrix.Core.Opcodes;
 
-[Opcode(0x01, R = CpuRegister.BC)]
-[Opcode(0x11, R = CpuRegister.DE)]
-[Opcode(0x21, R = CpuRegister.HL)]
-[Opcode(0x31, R = CpuRegister.SP)]
+[Opcode(0x01, CpuRegister.BC)]
+[Opcode(0x11, CpuRegister.DE)]
+[Opcode(0x21, CpuRegister.HL)]
+[Opcode(0x31, CpuRegister.SP)]
 internal sealed class Ld16(CpuRegister targetRegister) : IOpcode
 {
     public string Name => $"LD {CpuState.Name(targetRegister)}";

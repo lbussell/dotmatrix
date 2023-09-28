@@ -1,8 +1,7 @@
-using System.Text;
-
 namespace DotMatrix.Core;
 
 using System.Reflection;
+using System.Text;
 using DotMatrix.Core.Opcodes;
 
 public class Disassembler
@@ -25,7 +24,7 @@ public class Disassembler
             addr += 1;
             Instruction instruction = opcode.ReadType switch
             {
-                ReadType.None => new Instruction(opcode, null),
+                ReadType.None => new Instruction(opcode),
                 ReadType.Read8 => new Instruction(opcode, ReadInc8(rom, ref addr)),
                 ReadType.Read16 => new Instruction(opcode, ReadInc16(rom, ref addr)),
                 _ => throw new NotSupportedException($"Opcode {opcode.Name} ReadType {opcode.ReadType} not supported."),
@@ -34,7 +33,7 @@ public class Disassembler
         }
     }
 
-    private static void PrintOpcodeTable(Dictionary<byte, IOpcode> opcodes)
+    private static void PrintOpcodeTable(IReadOnlyDictionary<byte, IOpcode> opcodes)
     {
         int cellWidth = 8;
         char vLine = '\u2502';
