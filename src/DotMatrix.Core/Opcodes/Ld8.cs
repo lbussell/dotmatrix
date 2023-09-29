@@ -100,6 +100,12 @@ internal sealed class Store8Indirect(CpuRegister targetRegisterIndirect, CpuRegi
     public ReadType ReadType => ReadType.Read8;
 }
 
+[Opcode(0x06, CpuRegister.B)]
+[Opcode(0x0E, CpuRegister.C)]
+[Opcode(0x16, CpuRegister.D)]
+[Opcode(0x1E, CpuRegister.E)]
+[Opcode(0x26, CpuRegister.H)]
+[Opcode(0x2E, CpuRegister.L)]
 internal sealed class Load8Immediate(CpuRegister targetRegisterIndirect) : IOpcode
 {
     // Ex. LD (HL),$FE
