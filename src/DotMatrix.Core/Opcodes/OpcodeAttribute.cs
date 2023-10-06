@@ -12,8 +12,10 @@ internal sealed class OpcodeAttribute(byte opcode) : Attribute
     public OpcodeAttribute(byte opcode, CpuRegister r, CpuRegister r2)
         : this(opcode, r)
     {
-        R2 = r;
+        R2 = r2;
     }
+
+    public bool Prefix { get; init; } = true;
 
     public byte Opcode => opcode;
 

@@ -6,7 +6,7 @@ using DotMatrix.Core.Opcodes;
 
 public class Disassembler
 {
-    private readonly Dictionary<byte, IOpcode> _opcodes = RegisterOpcodes(true);
+    private readonly Dictionary<byte, IOpcode> _opcodes = RegisterOpcodes();
 
     public IEnumerable<Instruction> Disassemble(IReadableMemory rom)
     {
@@ -14,9 +14,10 @@ public class Disassembler
 
         for (ushort addr = 0; addr < rom.Length;)
         {
+            ushort instructionAddr = addr;
             byte opcodeByte = rom.Read8(addr);
 
-            if (!_opcodes.TryGetValue(opcodeByte, out IOpcode opcode))
+            if (!_opcodes.TryGetValue(opcodeByte, out IOpcode? opcode))
             {
                 throw new OpcodeNotFoundException(opcodeByte);
             }
@@ -24,10 +25,10 @@ public class Disassembler
             addr += 1;
             Instruction instruction = opcode.ReadType switch
             {
-                ReadType.None => new Instruction(opcode),
-                ReadType.Read8 => new Instruction(opcode, ReadInc8(rom, ref addr)),
-                ReadType.Read16 => new Instruction(opcode, ReadInc16(rom, ref addr)),
-                _ => throw new NotSupportedException($"Opcode {opcode.Name} ReadType {opcode.ReadType} not supported."),
+                ReadType.None => new Instruction(instructionAddr, opcode),
+                ReadType.Read8 => new Instruction(instructionAddr, opcode, ReadInc8(rom, ref addr)),
+                ReadType.Read16 => new Instruction(instructionAddr, opcode, ReadInc16(rom, ref addr)),
+                _ => throw new NotSupportedException($"Opcode {opcode.Format()} ReadType {opcode.ReadType} not supported."),
             };
             yield return instruction;
         }
@@ -91,28 +92,32 @@ public class Disassembler
         return val;
     }
 
-    private static Dictionary<byte, IOpcode> RegisterOpcodes(bool debugOutput = false)
+    private static Dictionary<byte, IOpcode> RegisterOpcodes()
     {
         Dictionary<byte, IOpcode> instructions = new();
 
         foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
         {
             IEnumerable<Attribute> attributes = type.GetCustomAttributes(typeof(OpcodeAttribute));
+
             foreach (Attribute attribute in attributes)
             {
                 OpcodeAttribute opcodeAttribute = (OpcodeAttribute)attribute;
+
+                // TODO: This smells.
                 IOpcode instruction = opcodeAttribute.R2 != CpuRegister.Implied
                     ? (IOpcode)Activator.CreateInstance(type, opcodeAttribute.R, opcodeAttribute.R2)!
                     : opcodeAttribute.R != CpuRegister.Implied
                         ? (IOpcode)Activator.CreateInstance(type, opcodeAttribute.R)!
                         : (IOpcode)Activator.CreateInstance(type)!;
 
-                instructions[opcodeAttribute.Opcode] = instruction;
-
-                if (debugOutput)
+                if (instructions.TryGetValue(opcodeAttribute.Opcode, out _))
                 {
-                    Console.WriteLine($"Registered opcode 0x{opcodeAttribute.Opcode:X2}: {instruction.Name}");
+                    throw new Exception(
+                        $"Found conflicting opcodes registered for address 0x{opcodeAttribute.Opcode:X2}");
                 }
+
+                instructions[opcodeAttribute.Opcode] = instruction;
             }
         }
 

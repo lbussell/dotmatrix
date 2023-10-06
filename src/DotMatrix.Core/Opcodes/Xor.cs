@@ -9,18 +9,9 @@ namespace DotMatrix.Core.Opcodes;
 [Opcode(0xAF, CpuRegister.A)]
 internal sealed class Xor(CpuRegister r) : IOpcode
 {
-    public string Name => $"XOR A,{Enum.GetName(typeof(CpuRegister), r)}";
-
     public int TCycles => 4;
 
     public ReadType ReadType => ReadType.None;
 
-    public CpuState Execute(CpuState cpuState, ushort? arg)
-    {
-        byte result = (byte)(cpuState.A ^ cpuState[r]);
-
-        // TODO: make setting flags better...
-        byte flags = (byte)(result == 0 ? 0b10000000 : 0x00);
-        return cpuState with { A = result, F = flags };
-    }
+    public string Format(string? arg = null) => $"XOR A,{Enum.GetName(typeof(CpuRegister), r)}";
 }

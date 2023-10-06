@@ -1,10 +1,11 @@
 namespace DotMatrix.Core.Opcodes;
 
-public class NotImplemented : IOpcode
+[Opcode(0x76)]
+public class Halt : IOpcode
 {
     public int TCycles => 4;
 
     public ReadType ReadType => ReadType.None;
 
-    public string Format(string? arg) => "Not Implemented";
+    public string Format(string? arg = null) => "HALT";
 }
