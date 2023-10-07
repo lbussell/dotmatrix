@@ -201,11 +201,6 @@ internal abstract class Load8Base(
 
     private string FormatArgument(OpcodeArgument argument, string? arg)
     {
-        Func<OpcodeArgument, string, string> wrapIndirect = (OpcodeArgument op, string sign)
-            => op.Type == OpcodeArgumentType.Indirect
-                ? $"({CpuState.Name(op.Register)}{sign})"
-                : CpuState.Name(op.Register);
-
         if (argument.Type == OpcodeArgumentType.Immediate)
         {
             return arg ?? "nn";
@@ -218,6 +213,11 @@ internal abstract class Load8Base(
             _ => string.Empty,
         };
 
-        return $"{wrapIndirect(argument, sign)}";
+        return $"{WrapIndirect(argument, sign)}";
+
+        string WrapIndirect(OpcodeArgument op, string sign)
+            => op.Type == OpcodeArgumentType.Indirect
+                ? $"({CpuState.Name(op.Register)}{sign})"
+                : CpuState.Name(op.Register);
     }
 }

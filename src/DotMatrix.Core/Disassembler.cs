@@ -6,23 +6,22 @@ using DotMatrix.Core.Opcodes;
 
 public class Disassembler
 {
-    private readonly Dictionary<byte, IOpcode> _opcodes = RegisterOpcodes();
+    private readonly Dictionary<byte, IOpcode> _opcodes;
+    private readonly Dictionary<byte, IOpcode> _prefixOpcodes;
+
+    public Disassembler()
+    {
+        (_opcodes, _prefixOpcodes) = RegisterOpcodes();
+        PrintOpcodeTable(_opcodes);
+        PrintOpcodeTable(_prefixOpcodes);
+    }
 
     public IEnumerable<Instruction> Disassemble(IReadableMemory rom)
     {
-        PrintOpcodeTable(_opcodes);
-
         for (ushort addr = 0; addr < rom.Length;)
         {
             ushort instructionAddr = addr;
-            byte opcodeByte = rom.Read8(addr);
-
-            if (!_opcodes.TryGetValue(opcodeByte, out IOpcode? opcode))
-            {
-                throw new OpcodeNotFoundException(opcodeByte);
-            }
-
-            addr += 1;
+            IOpcode opcode = GetOpcode(rom, ref addr);
             Instruction instruction = opcode.ReadType switch
             {
                 ReadType.None => new Instruction(instructionAddr, opcode),
@@ -83,18 +82,24 @@ public class Disassembler
         }
     }
 
-    private static byte ReadInc8(IReadableMemory data, ref ushort addr) => data.Read8(addr++);
-
-    private static ushort ReadInc16(IReadableMemory data, ref ushort addr)
+    private static byte ReadInc8(IReadableMemory rom, ref ushort addr)
     {
-        ushort val = data.Read16(addr);
+        byte val = rom.Read8(addr);
+        addr += 1;
+        return val;
+    }
+
+    private static ushort ReadInc16(IReadableMemory rom, ref ushort addr)
+    {
+        ushort val = rom.Read16(addr);
         addr += 2;
         return val;
     }
 
-    private static Dictionary<byte, IOpcode> RegisterOpcodes()
+    private static (Dictionary<byte, IOpcode> Opcodes, Dictionary<byte, IOpcode> PrefixOpcodes) RegisterOpcodes()
     {
-        Dictionary<byte, IOpcode> instructions = new();
+        Dictionary<byte, IOpcode> opcodes = new();
+        Dictionary<byte, IOpcode> prefixOpcodes = new();
 
         foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
         {
@@ -103,24 +108,44 @@ public class Disassembler
             foreach (Attribute attribute in attributes)
             {
                 OpcodeAttribute opcodeAttribute = (OpcodeAttribute)attribute;
+                Dictionary<byte, IOpcode> destination = opcodeAttribute.Prefix ? prefixOpcodes : opcodes;
 
                 // TODO: This smells.
-                IOpcode instruction = opcodeAttribute.R2 != CpuRegister.Implied
+                IOpcode opcodeInstance = opcodeAttribute.R2 != CpuRegister.Implied
                     ? (IOpcode)Activator.CreateInstance(type, opcodeAttribute.R, opcodeAttribute.R2)!
                     : opcodeAttribute.R != CpuRegister.Implied
                         ? (IOpcode)Activator.CreateInstance(type, opcodeAttribute.R)!
                         : (IOpcode)Activator.CreateInstance(type)!;
 
-                if (instructions.TryGetValue(opcodeAttribute.Opcode, out _))
+                if (destination.TryGetValue(opcodeAttribute.Opcode, out _))
                 {
                     throw new Exception(
                         $"Found conflicting opcodes registered for address 0x{opcodeAttribute.Opcode:X2}");
                 }
 
-                instructions[opcodeAttribute.Opcode] = instruction;
+                destination[opcodeAttribute.Opcode] = opcodeInstance;
             }
         }
 
-        return instructions;
+        return (opcodes, prefixOpcodes);
+    }
+
+    private IOpcode GetOpcode(IReadableMemory rom, ref ushort address)
+    {
+        IDictionary<byte, IOpcode> instructionBank = _opcodes;
+        byte opcodeByte = ReadInc8(rom, ref address);
+
+        if (opcodeByte == ConsoleSpecs.Prefix)
+        {
+            opcodeByte = ReadInc8(rom, ref address);
+            instructionBank = _prefixOpcodes;
+        }
+
+        if (!instructionBank.TryGetValue(opcodeByte, out IOpcode? opcode))
+        {
+            throw new OpcodeNotFoundException(opcodeByte);
+        }
+
+        return opcode;
     }
 }

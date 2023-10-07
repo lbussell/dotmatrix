@@ -15,7 +15,7 @@ internal sealed class OpcodeAttribute(byte opcode) : Attribute
         R2 = r2;
     }
 
-    public bool Prefix { get; init; } = true;
+    public bool Prefix { get; init; } = false;
 
     public byte Opcode => opcode;
 

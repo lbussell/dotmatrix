@@ -7,6 +7,7 @@ public static class ConsoleSpecs
     public const int FramesPerSecond = 60;
     public const int InstructionSizeInBytes = 2;
     public const int BootRomLengthInBytes = 0x100;
+    public const byte Prefix = 0xCB;
 
     public static Vec2Int DisplaySize { get; } = new() { Y = 144, X = 160 };
 }
