@@ -5,14 +5,13 @@ using System.Runtime.InteropServices;
 [StructLayout(LayoutKind.Explicit)]
 public struct CpuState
 {
-    /**
+    /*
         Flag explanations:
         Bit 7 = z, Zero flag.
         Bit 6 = n, Subtraction flag (BCD).
         Bit 5 = h, Half Carry flag (BCD).
         Bit 4 = c, Carry flag.
     */
-
     [FieldOffset(0)]
     public ushort AF;
     [FieldOffset(0)]
@@ -46,80 +45,48 @@ public struct CpuState
     [FieldOffset(10)]
     public ushort PC;
 
-    public ushort this[CpuRegister reg]
-    {
-        get
-        {
-            return reg switch
-            {
-                CpuRegister.A => A,
-                CpuRegister.F => F,
-                CpuRegister.AF => AF,
-                CpuRegister.B => B,
-                CpuRegister.C => C,
-                CpuRegister.BC => BC,
-                CpuRegister.D => D,
-                CpuRegister.E => E,
-                CpuRegister.DE => DE,
-                CpuRegister.H => H,
-                CpuRegister.L => L,
-                CpuRegister.HL => HL,
-                CpuRegister.SP => SP,
-                CpuRegister.PC => PC,
-                _ => throw new NotSupportedException(),
-            };
-        }
+    public readonly bool Z => (F & 0b1000_0000) != 0;
 
-        set
-        {
-            switch (reg)
-            {
-                case CpuRegister.A:
-                    A = (byte)value;
-                    break;
-                case CpuRegister.F:
-                    F = (byte)value;
-                    break;
-                case CpuRegister.B:
-                    B = (byte)value;
-                    break;
-                case CpuRegister.C:
-                    C = (byte)value;
-                    break;
-                case CpuRegister.D:
-                    D = (byte)value;
-                    break;
-                case CpuRegister.E:
-                    E = (byte)value;
-                    break;
-                case CpuRegister.H:
-                    H = (byte)value;
-                    break;
-                case CpuRegister.L:
-                    L = (byte)value;
-                    break;
-                case CpuRegister.AF:
-                    AF = value;
-                    break;
-                case CpuRegister.BC:
-                    BC = value;
-                    break;
-                case CpuRegister.DE:
-                    DE = value;
-                    break;
-                case CpuRegister.HL:
-                    HL = value;
-                    break;
-                case CpuRegister.SP:
-                    SP = value;
-                    break;
-                case CpuRegister.PC:
-                    PC = value;
-                    break;
-            }
-        }
-    }
+    public readonly bool N => (F & 0b0100_0000) != 0;
 
-    public static string Name(CpuRegister reg) =>
-        Enum.GetName(typeof(CpuRegister), reg) ?? string.Empty;
+    public readonly bool HalfCarryFlag => (F & 0b0010_0000) != 0;
+
+    public readonly bool CarryFlag => (F & 0b0001_0000) != 0;
+
+    // Maybe: F |= 0b0000_1111;
+    public void ClearFlags() => F = 0;
+
+    public void SetZ() => F |= 0b1000_0000;
+
+    public void SetZ(bool value) => F = value ? (byte)(F | 0b1000_0000) : (byte)(F & 0b0111_1111);
+
+    public void ClearZ() => F &= 0b0111_1111;
+
+    public void ClearSetZ() => F = 0b1000_0000;
+
+    public void ToggleZ() => F ^= 0b1000_0000;
+
+    public void SetN() => F |= 0b0100_0000;
+
+    public void SetN(bool value) => F = value ? (byte)(F | 0b0100_0000) : (byte)(F & 0b1011_1111);
+
+    public void ClearN() => F &= 0b1011_1111;
+
+    public void ToggleN() => F ^= 0b0100_0000;
+
+    public void SetHalfCarryFlag() => F |= 0b0010_0000;
+
+    public void SetHalfCarryFlag(bool value) => F = value ? (byte)(F | 0b0010_0000) : (byte)(F & 0b1101_1111);
+
+    public void ClearHalfCarryFlag() => F &= 0b1101_1111;
+
+    public void ToggleHalfCarryFlag() => F ^= 0b0010_0000;
+
+    public void SetCarryFlag() => F |= 0b0001_0000;
+
+    public void SetCarryFlag(bool value) => F = value ? (byte)(F | 0b0001_0000) : (byte)(F & 0b1110_1111);
+
+    public void ClearCarryFlag() => F &= 0b1110_1111;
+
+    public void ToggleCarryFlag() => F ^= 0b0001_0000;
 }

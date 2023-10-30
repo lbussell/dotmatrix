@@ -19,22 +19,25 @@ public sealed class Bus
 
     public byte this[ushort addr]
     {
-        get =>
-            addr switch
+        get => addr switch
             {
                 _ when BootRomIsAttached && addr < MemoryRegion.BootRomEnd => _bootRom!.Read8(addr),
                 _ => _memory[addr],
             };
-        set => throw new NotImplementedException();
+
+        // Naive implementation. TODO: Implement this properly.
+        set => _memory[addr] = value;
     }
 
-    public byte ReadInc8(ref ushort addr)
-    {
-        return this[addr++];
-    }
+    public byte ReadInc8(ref ushort addr) => this[addr++];
 
-    public ushort ReadInc16(ref ushort addr)
+    public ushort Read16(ushort addr) => (ushort)(this[addr++] | this[addr] << 8);
+
+    public ushort ReadInc16(ref ushort addr) => (ushort)(this[addr++] | this[addr++] << 8);
+
+    public void Write16(ushort addr, ushort value)
     {
-        return (ushort)(this[addr++] | this[addr++] << 8);
+        this[addr++] = (byte)value;
+        this[addr] = (byte)(value >> 8);
     }
 }

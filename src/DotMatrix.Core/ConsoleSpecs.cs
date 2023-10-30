@@ -1,5 +1,7 @@
 namespace DotMatrix.Core;
 
+using Size = (int X, int Y);
+
 public static class ConsoleSpecs
 {
     public const int MaxCartridgeSizeInBytes = 0x200000;
@@ -9,5 +11,5 @@ public static class ConsoleSpecs
     public const int BootRomLengthInBytes = 0x100;
     public const byte Prefix = 0xCB;
 
-    public static Vec2Int DisplaySize { get; } = new() { Y = 144, X = 160 };
+    public static Size DisplaySize { get; } = (160, 144);
 }

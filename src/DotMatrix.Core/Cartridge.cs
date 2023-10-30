@@ -2,12 +2,8 @@ namespace DotMatrix.Core;
 
 public sealed class Cartridge
 {
-    private static readonly (ushort start, ushort end) TitleRegion = (0x0134, 0x0143);
-    private static readonly (ushort start, ushort end) RomSize = (0x0148, 0x0148);
-
-    public string Title { get; init; }
-
-    public int SizeInBytes { get; init; }
+    private static readonly (ushort Start, ushort End) TitleRegion = (0x0134, 0x0143);
+    private static readonly (ushort Start, ushort End) RomSize = (0x0148, 0x0148);
 
     private readonly byte[] _data;
     private readonly byte[]? _bootRom;
@@ -26,17 +22,20 @@ public sealed class Cartridge
         Console.WriteLine($"Loaded ROM:\nTitle: {Title}\nSize: {SizeInBytes}B\nBanks: {_numBanks}");
     }
 
+    public string Title { get; }
+
+    public int SizeInBytes { get; }
+
     public byte this[uint addr]
     {
         get => _data[addr];
-        set => _data[addr] = value;
     }
 
-    private static (int sizeInBytes, int numBanks) DecodeSize(byte[] data)
+    private static (int SizeInBytes, int NumBanks) DecodeSize(byte[] data)
     {
-        byte value = data[RomSize.start];
+        byte value = data[RomSize.Start];
         int sizeInBytes = 32 * 1024 * (1 << value);
-        int numBanks = (int) Math.Pow(2, value + 1);
+        int numBanks = (int)Math.Pow(2, value + 1);
         return (sizeInBytes, numBanks);
     }
 
@@ -44,6 +43,6 @@ public sealed class Cartridge
     {
         // TODO: Account for manufacturer codes:
         // https://gbdev.io/pandocs/The_Cartridge_Header.html#013f-0142--manufacturer-code
-        return System.Text.Encoding.ASCII.GetString(data, TitleRegion.start, TitleRegion.end);
+        return System.Text.Encoding.ASCII.GetString(data, TitleRegion.Start, TitleRegion.End);
     }
 }

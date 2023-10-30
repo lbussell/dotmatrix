@@ -1,6 +1,6 @@
 namespace DotMatrix.Core;
 
-public sealed class BootRom : IReadableMemory
+public sealed class BootRom
 {
     private const int _length = ConsoleSpecs.BootRomLengthInBytes;
 

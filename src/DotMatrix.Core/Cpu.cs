@@ -1,43 +1,91 @@
 namespace DotMatrix.Core;
 
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using DotMatrix.Core.Opcodes;
 
-public sealed class Cpu(Bus bus, IDisplay display)
+internal delegate int Instruction();
+
+internal sealed class Cpu
 {
     private const int CyclesPerFrame = ConsoleSpecs.CpuSpeed / ConsoleSpecs.FramesPerSecond;
 
-    private readonly IOpcode _notImplementedInstruction = new NotImplemented();
+    private readonly Bus _bus;
+    private readonly Instruction[] _instructions;
     private CpuState _cpuState;
+    private int _cycles = 0;
     private int _cyclesSinceLastFrame = 0;
 
-    public event EventHandler<CpuState>? CpuStateChanged;
+    public Cpu(Bus bus)
+    {
+        _bus = bus;
+        _instructions = CreateInstructions();
+    }
 
-    public CpuState CpuState => _cpuState;
+    public CpuState State => _cpuState;
 
-    public long Cycles { get; private set; } = 0;
+    public long Cycles => _cycles;
 
-    public void ExecuteFrame(int cycles = CyclesPerFrame)
+    public void ExecuteFrames(int frames = 1, int cycles = CyclesPerFrame)
     {
         while (_cyclesSinceLastFrame < cycles)
         {
             int elapsedCycles = ExecuteCycle();
-            OnCpuStateChanged();
+
             /* Tick PPU/APU with elapsedCycles here */
+
             _cyclesSinceLastFrame += elapsedCycles;
-            Cycles += elapsedCycles;
+            _cycles += elapsedCycles;
         }
 
         /* Read inputs */
-        display.RequestRefresh();
+
+        /* Update display */
+
         _cyclesSinceLastFrame %= CyclesPerFrame;
     }
 
     private int ExecuteCycle()
     {
-        throw new NotImplementedException("CPU is not implemented yet.");
+        Console.WriteLine(_cpuState);
+
+        byte instruction = _bus.ReadInc8(ref _cpuState.PC);
+
+        return _instructions[instruction]();
     }
 
-    private void OnCpuStateChanged() => CpuStateChanged?.Invoke(this, _cpuState);
+    private Instruction[] CreateInstructions()
+    {
+        Instruction[] i = Enumerable.Range(0, 256).Select<int, Instruction>(op => () => Control.NotImplemented((byte)op)).ToArray();
+
+        i[0x01] = () => Load16.LoadImmediate(_bus, ref _cpuState.BC, ref _cpuState.PC);
+
+        i[0x11] = () => Load16.LoadImmediate(_bus, ref _cpuState.DE, ref _cpuState.PC);
+
+        i[0x21] = () => Load16.LoadImmediate(_bus, ref _cpuState.HL, ref _cpuState.PC);
+
+        i[0x31] = () => Load16.LoadImmediate(_bus, ref _cpuState.SP, ref _cpuState.PC);
+
+        i[0x40] = () => Load8.Load(ref _cpuState.B, ref _cpuState.B);
+        i[0x41] = () => Load8.Load(ref _cpuState.B, ref _cpuState.C);
+        i[0x42] = () => Load8.Load(ref _cpuState.B, ref _cpuState.D);
+        i[0x43] = () => Load8.Load(ref _cpuState.B, ref _cpuState.E);
+        i[0x44] = () => Load8.Load(ref _cpuState.B, ref _cpuState.H);
+        i[0x45] = () => Load8.Load(ref _cpuState.B, ref _cpuState.L);
+
+        i[0x47] = () => Load8.Load(ref _cpuState.B, ref _cpuState.A);
+
+        i[0xF9] = () => Load16.LoadSPFromHL(ref _cpuState);
+
+        i[0xA8] = () => Alu8.Xor(ref _cpuState, ref _cpuState.B);
+        i[0xA9] = () => Alu8.Xor(ref _cpuState, ref _cpuState.C);
+        i[0xAA] = () => Alu8.Xor(ref _cpuState, ref _cpuState.D);
+        i[0xAB] = () => Alu8.Xor(ref _cpuState, ref _cpuState.E);
+        i[0xAC] = () => Alu8.Xor(ref _cpuState, ref _cpuState.H);
+        i[0xAD] = () => Alu8.Xor(ref _cpuState, ref _cpuState.L);
+        i[0xAE] = () => Alu8.XorHLIndirect(_bus, ref _cpuState);
+        i[0xAF] = () => Alu8.Xor(ref _cpuState, ref _cpuState.A);
+
+        i[0xEE] = () => Alu8.XorImmediate(_bus, ref _cpuState);
+
+        return i;
+    }
 }
