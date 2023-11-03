@@ -89,4 +89,9 @@ public struct CpuState
     public void ClearCarryFlag() => F &= 0b1110_1111;
 
     public void ToggleCarryFlag() => F ^= 0b0001_0000;
+
+    public override string ToString()
+    {
+        return $"AF:{AF:X4} BC:{BC:X4} DE:{DE:X4} HL:{HL:X4} SP:{SP:X4} PC:{PC:X4}";
+    }
 }

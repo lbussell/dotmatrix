@@ -26,7 +26,11 @@ public sealed class Bus
             };
 
         // Naive implementation. TODO: Implement this properly.
-        set => _memory[addr] = value;
+        set
+        {
+            Console.WriteLine($" -> Wrote ${value:X2} to address ${addr:X4}");
+            _memory[addr] = value;
+        }
     }
 
     public byte ReadInc8(ref ushort addr) => this[addr++];
