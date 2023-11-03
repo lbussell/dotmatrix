@@ -54,6 +54,8 @@ internal sealed partial class Cpu
     {
         Instruction[] i = CreateEmptyInstructionsTemp();
 
+        i[0x7C] = () => Bitwise.Bit(0x07, ref _cpuState.H, ref _cpuState);
+
         return i;
     }
 }

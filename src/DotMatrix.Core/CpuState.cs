@@ -66,6 +66,8 @@ public struct CpuState
 
     public void ToggleZ() => F ^= 0b1000_0000;
 
+    public void SetZIfZero(int value) => SetZ(value == 0);
+
     public void SetN() => F |= 0b0100_0000;
 
     public void SetN(bool value) => F = value ? (byte)(F | 0b0100_0000) : (byte)(F & 0b1011_1111);

@@ -10,6 +10,7 @@ internal sealed partial class Cpu
 
     private readonly Bus _bus;
     private readonly Instruction[] _instructions;
+    private readonly Instruction[] _prefixInstructions;
     private CpuState _cpuState;
     private int _cycles = 0;
     private int _cyclesSinceLastFrame = 0;
@@ -18,6 +19,7 @@ internal sealed partial class Cpu
     {
         _bus = bus;
         _instructions = CreateInstructions();
+        _prefixInstructions = CreatePrefixInstructions();
     }
 
     public CpuState State => _cpuState;
@@ -49,6 +51,10 @@ internal sealed partial class Cpu
 
         byte instruction = _bus.ReadInc8(ref _cpuState.PC);
 
-        return _instructions[instruction]();
+        return instruction switch
+        {
+            0xCB => _prefixInstructions[_bus.ReadInc8(ref _cpuState.PC)](),
+            _ => _instructions[instruction](),
+        };
     }
 }
