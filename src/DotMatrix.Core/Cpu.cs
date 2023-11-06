@@ -1,7 +1,5 @@
 namespace DotMatrix.Core;
 
-using DotMatrix.Core.Opcodes;
-
 internal delegate int Instruction();
 
 internal sealed partial class Cpu
@@ -50,6 +48,8 @@ internal sealed partial class Cpu
         Console.WriteLine(_cpuState);
 
         byte instruction = _bus.ReadInc8(ref _cpuState.PC);
+
+        Console.WriteLine($"Executing ${instruction:X2} (next ${_bus[_cpuState.PC]:X2})");
 
         return instruction switch
         {

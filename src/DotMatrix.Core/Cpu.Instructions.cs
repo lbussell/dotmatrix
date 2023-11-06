@@ -1,5 +1,7 @@
 namespace DotMatrix.Core;
 
+using System.ComponentModel;
+using System.Text;
 using DotMatrix.Core.Opcodes;
 
 internal sealed partial class Cpu
@@ -15,6 +17,7 @@ internal sealed partial class Cpu
 
         i[0x11] = () => Load16.Immediate(_bus, ref _cpuState.DE, ref _cpuState.PC);
 
+        i[0x20] = () => Branch.RelativeJump(ref _cpuState, _bus, () => !_cpuState.Z); // JR NZ,i8
         i[0x21] = () => Load16.Immediate(_bus, ref _cpuState.HL, ref _cpuState.PC);
         i[0x22] = () => Load8.FromIndirectInc(ref _cpuState.HL, ref _cpuState.A, _bus);
 
@@ -54,7 +57,18 @@ internal sealed partial class Cpu
     {
         Instruction[] i = CreateEmptyInstructionsTemp();
 
-        i[0x7C] = () => Bitwise.Bit(0x07, ref _cpuState.H, ref _cpuState);
+        int addr = 0x40;
+        for (int bit = 0; bit <= 7; bit += 1)
+        {
+            i[addr + 0] = () => Bitwise.Bit((byte)bit, ref _cpuState.B, ref _cpuState);
+            i[addr + 1] = () => Bitwise.Bit((byte)bit, ref _cpuState.C, ref _cpuState);
+            i[addr + 2] = () => Bitwise.Bit((byte)bit, ref _cpuState.D, ref _cpuState);
+            i[addr + 3] = () => Bitwise.Bit((byte)bit, ref _cpuState.E, ref _cpuState);
+            i[addr + 4] = () => Bitwise.Bit((byte)bit, ref _cpuState.H, ref _cpuState);
+            i[addr + 5] = () => Bitwise.Bit((byte)bit, ref _cpuState.L, ref _cpuState);
+            i[addr + 7] = () => Bitwise.Bit((byte)bit, ref _cpuState.A, ref _cpuState);
+            addr += 0x08;
+        }
 
         return i;
     }
