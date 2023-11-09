@@ -2,7 +2,7 @@ namespace DotMatrix.Core.Opcodes;
 
 internal static class Load16
 {
-    public static int Immediate(Bus bus, ref ushort targetRegister, ref ushort pc)
+    public static int Immediate(ref ushort targetRegister, ref ushort pc, Bus bus)
     {
         targetRegister = bus.ReadInc16(ref pc);
         return 3 * 4;
