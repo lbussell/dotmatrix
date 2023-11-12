@@ -31,6 +31,7 @@ internal sealed partial class Cpu
             int elapsedCycles = ExecuteCycle();
 
             /* Tick PPU/APU with elapsedCycles here */
+            UpdateTimers(elapsedCycles);
 
             _cyclesSinceLastFrame += elapsedCycles;
             _cycles += elapsedCycles;
@@ -56,5 +57,10 @@ internal sealed partial class Cpu
             0xCB => _prefixInstructions[_bus.ReadInc8(ref _cpuState.PC)](),
             _ => _instructions[instruction](),
         };
+    }
+
+    private void UpdateTimers(int cycles)
+    {
+        // Update timers
     }
 }

@@ -21,6 +21,9 @@ public static class MemoryRegion
     public const ushort Prohibited = 0xFEA0;
     public const ushort ProhibitedEnd = 0xFEFF;
     public const ushort IOReg = 0xFF00;
+    public const ushort Timer = 0xFF05;
+    public const ushort TimerModulator = 0xFF06;
+    public const ushort TimerController = 0xFF07;
     public const ushort HRam = 0xFF80;
     public const ushort IEReg = 0xFFFF;
 }
