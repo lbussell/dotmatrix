@@ -24,6 +24,7 @@ public static class MemoryRegion
     public const ushort Timer = 0xFF05;
     public const ushort TimerModulator = 0xFF06;
     public const ushort TimerController = 0xFF07;
+    public const ushort InterruptFlag = 0xFF0F;
     public const ushort HRam = 0xFF80;
-    public const ushort IEReg = 0xFFFF;
+    public const ushort InterruptEnable = 0xFFFF;
 }

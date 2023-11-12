@@ -45,9 +45,12 @@ public struct CpuState
     [FieldOffset(10)]
     public ushort PC;
 
-    public readonly bool Z => (F & 0b1000_0000) != 0;
+    [FieldOffset(12)]
+    public bool IME;
 
-    public readonly bool N => (F & 0b0100_0000) != 0;
+    public readonly bool ZeroFlag => (F & 0b1000_0000) != 0;
+
+    public readonly bool NSubFlag => (F & 0b0100_0000) != 0;
 
     public readonly bool HalfCarryFlag => (F & 0b0010_0000) != 0;
 

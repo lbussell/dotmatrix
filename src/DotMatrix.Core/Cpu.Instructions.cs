@@ -23,21 +23,25 @@ internal sealed partial class Cpu
         i[0x11] = () => Load16.Immediate(ref _cpuState.DE, ref _cpuState.PC, _bus);
         i[0x14] = () => Alu8.Inc(ref _cpuState.D, ref _cpuState);
         i[0x16] = () => Load8.RegisterImmediate(ref _cpuState.D, ref _cpuState.PC, _bus);
+        i[0x18] = () => Branch.JumpImmediate(ref _cpuState, _bus);
         i[0x1A] = () => Load8.RegisterIndirect(ref _cpuState.A, ref _cpuState.DE, _bus);
         i[0x1C] = () => Alu8.Inc(ref _cpuState.E, ref _cpuState);
         i[0x1E] = () => Load8.RegisterImmediate(ref _cpuState.E, ref _cpuState.PC, _bus);
 
-        i[0x20] = () => Branch.RelativeJump(ref _cpuState, _bus, () => !_cpuState.Z); // JR NZ,i8
+        i[0x20] = () => Branch.JumpRelative(ref _cpuState, _bus, () => !_cpuState.ZeroFlag); // JR NZ,i8
         i[0x21] = () => Load16.Immediate(ref _cpuState.HL, ref _cpuState.PC, _bus);
         i[0x22] = () => Load8.FromIndirectInc(ref _cpuState.HL, ref _cpuState.A, _bus);
         i[0x24] = () => Alu8.Inc(ref _cpuState.H, ref _cpuState);
         i[0x26] = () => Load8.RegisterImmediate(ref _cpuState.H, ref _cpuState.PC, _bus);
+        i[0x28] = () => Branch.JumpRelative(ref _cpuState, _bus, () => _cpuState.ZeroFlag); // JR Z,i8
         i[0x2A] = () => Load8.IndirectInc(ref _cpuState.A, ref _cpuState.HL, _bus);
         i[0x2C] = () => Alu8.Inc(ref _cpuState.L, ref _cpuState);
         i[0x2E] = () => Load8.RegisterImmediate(ref _cpuState.L, ref _cpuState.PC, _bus);
 
+        i[0x30] = () => Branch.JumpRelative(ref _cpuState, _bus, () => !_cpuState.CarryFlag); // JR NC,i8
         i[0x31] = () => Load16.Immediate(ref _cpuState.SP, ref _cpuState.PC, _bus);
         i[0x32] = () => Load8.FromIndirectDec(ref _cpuState.HL, ref _cpuState.A, _bus);
+        i[0x38] = () => Branch.JumpRelative(ref _cpuState, _bus, () => _cpuState.CarryFlag); // JR C,i8
         i[0x3A] = () => Load8.IndirectDec(ref _cpuState.A, ref _cpuState.HL, _bus);
         i[0x3C] = () => Alu8.Inc(ref _cpuState.A, ref _cpuState);
         i[0x3E] = () => Load8.RegisterImmediate(ref _cpuState.A, ref _cpuState.PC, _bus);
@@ -120,6 +124,39 @@ internal sealed partial class Cpu
         i[0xAD] = () => Alu8.Xor(ref _cpuState, ref _cpuState.L);
         i[0xAE] = () => Alu8.XorHLIndirect(_bus, ref _cpuState);
         i[0xAF] = () => Alu8.Xor(ref _cpuState, ref _cpuState.A);
+
+        i[0xC0] = () => Branch.Return(ref _cpuState, _bus, () => !_cpuState.ZeroFlag); // RET NZ
+        i[0xC2] = () => Branch.Jump(ref _cpuState, _bus, () => !_cpuState.ZeroFlag); // JP NZ,nn
+        i[0xC3] = () => Branch.JumpImmediate(ref _cpuState, _bus); // JP nn
+        i[0xC4] = () => Branch.Call(ref _cpuState, _bus, () => !_cpuState.ZeroFlag); // CALL NZ,nn
+        i[0xC7] = () => Branch.RSTn(ref _cpuState, 0x00, _bus); // RST 00H
+        i[0xC8] = () => Branch.Return(ref _cpuState, _bus, () => _cpuState.ZeroFlag); // RET Z
+        i[0xC9] = () => Branch.Return(ref _cpuState, _bus); // RET
+        i[0xCA] = () => Branch.Jump(ref _cpuState, _bus, () => _cpuState.ZeroFlag); // JP Z,nn
+        /* 0xCB reserved for prefix instructions */
+        i[0xCC] = () => Branch.Call(ref _cpuState, _bus, () => _cpuState.ZeroFlag); // CALL Z,nn
+        i[0xCD] = () => Branch.Call(ref _cpuState, _bus); // CALL nn
+        i[0xCF] = () => Branch.RSTn(ref _cpuState, 0x08, _bus); // RST 08H
+
+        i[0xD0] = () => Branch.Return(ref _cpuState, _bus, () => !_cpuState.CarryFlag);
+        i[0xD2] = () => Branch.Jump(ref _cpuState, _bus, () => !_cpuState.CarryFlag);
+        /* i[0xD3] undefined */
+        i[0xD4] = () => Branch.Call(ref _cpuState, _bus, () => !_cpuState.CarryFlag);
+        i[0xD7] = () => Branch.RSTn(ref _cpuState, 0x10, _bus);
+        i[0xD8] = () => Branch.Return(ref _cpuState, _bus, () => _cpuState.CarryFlag);
+        i[0xD9] = () => Branch.ReturnFromInterrupt(ref _cpuState, _bus);
+        i[0xDA] = () => Branch.Jump(ref _cpuState, _bus, () => _cpuState.CarryFlag);
+        /* i[0xDB] undefined */
+        i[0xDC] = () => Branch.Call(ref _cpuState, _bus, () => _cpuState.CarryFlag);
+        /* i[0xDD] undefined */
+        i[0xDF] = () => Branch.RSTn(ref _cpuState, 0x18, _bus);
+
+        i[0xE7] = () => Branch.RSTn(ref _cpuState, 0x20, _bus);
+        i[0xE9] = () => Branch.JumpToHL(ref _cpuState);
+        i[0xEF] = () => Branch.RSTn(ref _cpuState, 0x28, _bus);
+
+        i[0xF7] = () => Branch.RSTn(ref _cpuState, 0x30, _bus);
+        i[0xFF] = () => Branch.RSTn(ref _cpuState, 0x38, _bus);
 
         i[0xE0] = () => Load8.FromADirect(ref _cpuState, ref _cpuState.PC, _bus);
         i[0xE2] = () => Load8.FromAIndirect(ref _cpuState, ref _cpuState.PC, _bus);
