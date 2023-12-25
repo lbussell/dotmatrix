@@ -48,32 +48,38 @@ public struct CpuState
     [FieldOffset(12)]
     public bool IME;
 
-    public readonly bool ZeroFlag => (F & 0b1000_0000) != 0;
+    public bool CarryFlag
+    {
+        get => (F & 0b0001_0000) != 0;
+        set => F = value ? (byte)(F | 0b0001_0000) : (byte)(F & 0b1110_1111);
+    }
 
-    public readonly bool NSubFlag => (F & 0b0100_0000) != 0;
+    public bool ZeroFlag
+    {
+        get => (F & 0b1000_0000) != 0;
+        set => F = value ? (byte)(F | 0b1000_0000) : (byte)(F & 0b0111_1111);
+    }
 
-    public readonly bool HalfCarryFlag => (F & 0b0010_0000) != 0;
+    public bool HalfCarryFlag
+    {
+        get => (F & 0b0010_0000) != 0;
+        set => F = value ? (byte)(F | 0b0010_0000) : (byte)(F & 0b1101_1111);
+    }
 
-    public readonly bool CarryFlag => (F & 0b0001_0000) != 0;
+    public bool NSubFlag
+    {
+        get => (F & 0b0100_0000) != 0;
+        set => F = value ? (byte)(F | 0b0100_0000) : (byte)(F & 0b1011_1111);
+    }
 
     // Maybe: F |= 0b0000_1111;
     public void ClearFlags() => F = 0;
-
-    public void SetZ() => F |= 0b1000_0000;
-
-    public void SetZ(bool value) => F = value ? (byte)(F | 0b1000_0000) : (byte)(F & 0b0111_1111);
 
     public void ClearZ() => F &= 0b0111_1111;
 
     public void ClearSetZ() => F = 0b1000_0000;
 
     public void ToggleZ() => F ^= 0b1000_0000;
-
-    public void SetZIfZero(int value) => SetZ(value == 0);
-
-    public void SetN() => F |= 0b0100_0000;
-
-    public void SetN(bool value) => F = value ? (byte)(F | 0b0100_0000) : (byte)(F & 0b1011_1111);
 
     public void ClearN() => F &= 0b1011_1111;
 

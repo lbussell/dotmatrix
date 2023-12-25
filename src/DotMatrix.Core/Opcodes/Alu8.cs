@@ -30,7 +30,7 @@ internal static class Alu8
     {
         cpuState.A ^= operand;
         cpuState.ClearFlags();
-        cpuState.SetZ(cpuState.A == 0);
+        cpuState.ZeroFlag = cpuState.A == 0;
     }
 
     private static void AddSetHalfCarry(ref byte register, byte toAdd, ref CpuState cpuState)

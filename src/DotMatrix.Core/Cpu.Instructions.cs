@@ -13,6 +13,7 @@ internal sealed partial class Cpu
 
         Instruction[] i = CreateEmptyInstructionsTemp();
 
+        i[0x00] = Control.NoOp;
         i[0x01] = () => Load16.Immediate(ref _cpuState.BC, ref _cpuState.PC, _bus);
         i[0x04] = () => Alu8.Inc(ref _cpuState.B, ref _cpuState);
         i[0x06] = () => Load8.RegisterImmediate(ref _cpuState.B, ref _cpuState.PC, _bus);
@@ -23,6 +24,7 @@ internal sealed partial class Cpu
         i[0x11] = () => Load16.Immediate(ref _cpuState.DE, ref _cpuState.PC, _bus);
         i[0x14] = () => Alu8.Inc(ref _cpuState.D, ref _cpuState);
         i[0x16] = () => Load8.RegisterImmediate(ref _cpuState.D, ref _cpuState.PC, _bus);
+        i[0x17] = () => Bitwise.RotateLeftA(ref _cpuState);
         i[0x18] = () => Branch.JumpImmediate(ref _cpuState, _bus);
         i[0x1A] = () => Load8.RegisterIndirect(ref _cpuState.A, ref _cpuState.DE, _bus);
         i[0x1C] = () => Alu8.Inc(ref _cpuState.E, ref _cpuState);
@@ -126,6 +128,7 @@ internal sealed partial class Cpu
         i[0xAF] = () => Alu8.Xor(ref _cpuState, ref _cpuState.A);
 
         i[0xC0] = () => Branch.Return(ref _cpuState, _bus, () => !_cpuState.ZeroFlag); // RET NZ
+        i[0xC1] = () => Branch.Pop(ref _cpuState, _bus, ref _cpuState.BC); // POP BC
         i[0xC2] = () => Branch.Jump(ref _cpuState, _bus, () => !_cpuState.ZeroFlag); // JP NZ,nn
         i[0xC3] = () => Branch.JumpImmediate(ref _cpuState, _bus); // JP nn
         i[0xC4] = () => Branch.Call(ref _cpuState, _bus, () => !_cpuState.ZeroFlag); // CALL NZ,nn
@@ -140,6 +143,7 @@ internal sealed partial class Cpu
         i[0xCF] = () => Branch.RSTn(ref _cpuState, 0x08, _bus); // RST 08H
 
         i[0xD0] = () => Branch.Return(ref _cpuState, _bus, () => !_cpuState.CarryFlag);
+        i[0xD1] = () => Branch.Pop(ref _cpuState, _bus, ref _cpuState.DE);
         i[0xD2] = () => Branch.Jump(ref _cpuState, _bus, () => !_cpuState.CarryFlag);
         /* i[0xD3] undefined */
         i[0xD4] = () => Branch.Call(ref _cpuState, _bus, () => !_cpuState.CarryFlag);
@@ -154,6 +158,7 @@ internal sealed partial class Cpu
         i[0xDF] = () => Branch.RSTn(ref _cpuState, 0x18, _bus);
 
         i[0xE0] = () => Load8.FromADirect(ref _cpuState, ref _cpuState.PC, _bus);
+        i[0xE1] = () => Branch.Pop(ref _cpuState, _bus, ref _cpuState.HL);
         i[0xE2] = () => Load8.FromAIndirect(ref _cpuState, ref _cpuState.PC, _bus);
         i[0xE5] = () => Load16.Push(ref _cpuState.HL, ref _cpuState, _bus);
         i[0xE7] = () => Branch.RSTn(ref _cpuState, 0x20, _bus);
@@ -161,6 +166,7 @@ internal sealed partial class Cpu
         i[0xEE] = () => Alu8.XorImmediate(_bus, ref _cpuState);
         i[0xEF] = () => Branch.RSTn(ref _cpuState, 0x28, _bus);
 
+        i[0xF1] = () => Branch.Pop(ref _cpuState, _bus, ref _cpuState.AF);
         i[0xF5] = () => Load16.Push(ref _cpuState.AF, ref _cpuState, _bus);
         i[0xF7] = () => Branch.RSTn(ref _cpuState, 0x30, _bus);
         i[0xFF] = () => Branch.RSTn(ref _cpuState, 0x38, _bus);
@@ -184,6 +190,15 @@ internal sealed partial class Cpu
             i[addr + 7] = () => Bitwise.Bit((byte)bit, ref _cpuState.A, ref _cpuState);
             addr += 0x08;
         }
+
+        i[0x10] = () => Bitwise.RotateLeft(ref _cpuState.B, ref _cpuState);
+        i[0x11] = () => Bitwise.RotateLeft(ref _cpuState.C, ref _cpuState);
+        i[0x12] = () => Bitwise.RotateLeft(ref _cpuState.D, ref _cpuState);
+        i[0x13] = () => Bitwise.RotateLeft(ref _cpuState.E, ref _cpuState);
+        i[0x14] = () => Bitwise.RotateLeft(ref _cpuState.H, ref _cpuState);
+        i[0x15] = () => Bitwise.RotateLeft(ref _cpuState.L, ref _cpuState);
+
+        i[0x17] = () => Bitwise.RotateLeft(ref _cpuState.A, ref _cpuState);
 
         return i;
     }

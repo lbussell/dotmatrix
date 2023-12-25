@@ -79,6 +79,13 @@ internal static class Branch
         return 3 * 4;
     }
 
+    public static int Pop(ref CpuState cpuState, Bus bus, ref ushort targetRegister)
+    {
+        targetRegister = bus.ReadInc16(ref cpuState.SP);
+        cpuState.AF &= 0xFFF0;
+        return 3 * 4;
+    }
+
     public static int Return(ref CpuState cpuState, Bus bus)
     {
         cpuState.PC = bus.ReadInc16(ref cpuState.SP);
