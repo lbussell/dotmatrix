@@ -15,6 +15,13 @@ internal static class Load16
         return 5 * 4;
     }
 
+    public static int Push(ref ushort sourceRegister, ref CpuState cpuState, Bus bus)
+    {
+        cpuState.SP -= 2;
+        bus.Write16(cpuState.SP, sourceRegister);
+        return 4 * 4;
+    }
+
     public static int SPFromHL(ref CpuState cpuState)
     {
         cpuState.SP = cpuState.HL;

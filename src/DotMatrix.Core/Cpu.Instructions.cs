@@ -129,6 +129,7 @@ internal sealed partial class Cpu
         i[0xC2] = () => Branch.Jump(ref _cpuState, _bus, () => !_cpuState.ZeroFlag); // JP NZ,nn
         i[0xC3] = () => Branch.JumpImmediate(ref _cpuState, _bus); // JP nn
         i[0xC4] = () => Branch.Call(ref _cpuState, _bus, () => !_cpuState.ZeroFlag); // CALL NZ,nn
+        i[0xC5] = () => Load16.Push(ref _cpuState.BC, ref _cpuState, _bus);
         i[0xC7] = () => Branch.RSTn(ref _cpuState, 0x00, _bus); // RST 00H
         i[0xC8] = () => Branch.Return(ref _cpuState, _bus, () => _cpuState.ZeroFlag); // RET Z
         i[0xC9] = () => Branch.Return(ref _cpuState, _bus); // RET
@@ -142,6 +143,7 @@ internal sealed partial class Cpu
         i[0xD2] = () => Branch.Jump(ref _cpuState, _bus, () => !_cpuState.CarryFlag);
         /* i[0xD3] undefined */
         i[0xD4] = () => Branch.Call(ref _cpuState, _bus, () => !_cpuState.CarryFlag);
+        i[0xD5] = () => Load16.Push(ref _cpuState.DE, ref _cpuState, _bus);
         i[0xD7] = () => Branch.RSTn(ref _cpuState, 0x10, _bus);
         i[0xD8] = () => Branch.Return(ref _cpuState, _bus, () => _cpuState.CarryFlag);
         i[0xD9] = () => Branch.ReturnFromInterrupt(ref _cpuState, _bus);
@@ -151,16 +153,17 @@ internal sealed partial class Cpu
         /* i[0xDD] undefined */
         i[0xDF] = () => Branch.RSTn(ref _cpuState, 0x18, _bus);
 
-        i[0xE7] = () => Branch.RSTn(ref _cpuState, 0x20, _bus);
-        i[0xE9] = () => Branch.JumpToHL(ref _cpuState);
-        i[0xEF] = () => Branch.RSTn(ref _cpuState, 0x28, _bus);
-
-        i[0xF7] = () => Branch.RSTn(ref _cpuState, 0x30, _bus);
-        i[0xFF] = () => Branch.RSTn(ref _cpuState, 0x38, _bus);
-
         i[0xE0] = () => Load8.FromADirect(ref _cpuState, ref _cpuState.PC, _bus);
         i[0xE2] = () => Load8.FromAIndirect(ref _cpuState, ref _cpuState.PC, _bus);
+        i[0xE5] = () => Load16.Push(ref _cpuState.HL, ref _cpuState, _bus);
+        i[0xE7] = () => Branch.RSTn(ref _cpuState, 0x20, _bus);
+        i[0xE9] = () => Branch.JumpToHL(ref _cpuState);
         i[0xEE] = () => Alu8.XorImmediate(_bus, ref _cpuState);
+        i[0xEF] = () => Branch.RSTn(ref _cpuState, 0x28, _bus);
+
+        i[0xF5] = () => Load16.Push(ref _cpuState.AF, ref _cpuState, _bus);
+        i[0xF7] = () => Branch.RSTn(ref _cpuState, 0x30, _bus);
+        i[0xFF] = () => Branch.RSTn(ref _cpuState, 0x38, _bus);
 
         return i;
     }
