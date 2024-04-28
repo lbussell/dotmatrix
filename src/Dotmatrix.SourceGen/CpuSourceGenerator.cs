@@ -13,7 +13,7 @@ using System.Runtime.Serialization;
 using System.Diagnostics;
 
 [Generator]
-public class CpuGenerator : IIncrementalGenerator
+public class CpuSourceGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {

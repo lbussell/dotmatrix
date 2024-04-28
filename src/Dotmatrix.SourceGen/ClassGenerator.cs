@@ -1,4 +1,6 @@
-﻿namespace Dotmatrix.SourceGen.Builders;
+﻿namespace Dotmatrix.SourceGen;
+
+using Builders;
 
 internal static class ClassGenerator
 {
