@@ -1,6 +1,9 @@
 ﻿namespace Dotmatrix;
 
-public class SM83 : ICpu
-{
+using Dotmatrix.Generated;
 
+public partial class SM83 : ICpu
+{
+    [GenerateCpuInstructions]
+    partial void Execute();
 }
