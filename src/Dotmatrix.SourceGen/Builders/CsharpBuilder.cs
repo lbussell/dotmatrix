@@ -6,7 +6,7 @@ public sealed class CsharpBuilder(int Spaces = 4)
 {
     private readonly StringBuilder _builder = new();
 
-    private int _indentationLevel = 0;
+    private int _indentationLevel;
 
     private string Indentation => new(' ', _indentationLevel * Spaces);
 
@@ -31,25 +31,30 @@ public sealed class CsharpBuilder(int Spaces = 4)
         return this;
     }
 
-    public CsharpBuilder NewLine() => AppendLine();
-
     public CsharpBuilder AppendLine(string line = "")
     {
-        _builder.AppendLine(Indentation + line);
+        string indentation = !string.IsNullOrEmpty(line) ? Indentation : "";
+        _builder.AppendLine(indentation + line);
         return this;
     }
 
-    public CsharpBuilder IncreaseIndent()
+    public string Build()
+    {
+        while (_indentationLevel != 0)
+        {
+            CloseScope();
+        }
+
+        return _builder.ToString();
+    }
+
+    private void IncreaseIndent()
     {
         _indentationLevel += 1;
-        return this;
     }
 
-    public CsharpBuilder DecreaseIndent()
+    private void DecreaseIndent()
     {
         _indentationLevel -= 1;
-        return this;
     }
-
-    public string Build() => _builder.ToString();
 }

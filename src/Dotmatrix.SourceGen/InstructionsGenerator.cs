@@ -1,23 +1,38 @@
-using Dotmatrix.SourceGen.Builders;
-
 namespace Dotmatrix.SourceGen;
 
 using Microsoft.CodeAnalysis;
+using Dotmatrix.SourceGen.Builders;
+using Dotmatrix.SourceGen.Model;
 
 internal static class InstructionsGenerator
 {
     public static void GenerateInstructions(SourceProductionContext ctx, InstructionsData data) =>
         ctx.AddSource(data.MethodPath.ClassName + Names.GeneratedExtension, GenerateSource(data));
 
-    public static string GenerateSource(InstructionsData data)
+    private static string GenerateSource(InstructionsData data)
     {
-        return new CsharpBuilder()
-            .WithNamespace(data.MethodPath.Namespace)
+        CsharpBuilder builder = new CsharpBuilder().WithNamespace(data.MethodPath.Namespace);
+
+        builder = builder
             .OpenScope($"public partial class {data.MethodPath.ClassName}")
-            .OpenScope($"private partial CpuState {data.MethodPath.MethodName}(CpuState previousState)")
-            .AppendLine("throw new NotImplementedException(\"Not implemented\");")
-            .CloseScope()
-            .CloseScope()
-            .Build();
+            .OpenScope($"private partial CpuState {data.MethodPath.MethodName}(CpuState previousState)");
+
+        builder.AppendLine();
+        builder.AppendLine("// Regular instructions");
+        foreach (Opcode opcode in data.Instructions.Unprefixed)
+        {
+            builder.AppendLine($"// {opcode.Name}");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("// Prefixed instructions");
+        foreach (Opcode opcode in data.Instructions.CBPrefixed)
+        {
+            builder.AppendLine($"// {opcode.Name}");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("return previousState;");
+        return builder.Build();
     }
 }
