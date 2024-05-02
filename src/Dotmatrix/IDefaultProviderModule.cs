@@ -1,4 +1,4 @@
-﻿namespace Dotmatrix;
+﻿namespace DotMatrix;
 
 using Jab;
 

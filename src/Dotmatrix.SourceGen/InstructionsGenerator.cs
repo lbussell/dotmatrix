@@ -1,8 +1,8 @@
-namespace Dotmatrix.SourceGen;
+namespace DotMatrix.SourceGen;
 
 using Microsoft.CodeAnalysis;
-using Dotmatrix.SourceGen.Builders;
-using Dotmatrix.SourceGen.Model;
+using DotMatrix.SourceGen.Builders;
+using DotMatrix.SourceGen.Model;
 
 internal static class InstructionsGenerator
 {

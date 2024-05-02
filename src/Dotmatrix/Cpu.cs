@@ -1,6 +1,6 @@
-﻿namespace Dotmatrix;
+﻿namespace DotMatrix;
 
-using Generated;
+using DotMatrix.Generated;
 
 public partial class Cpu(IBus bus) : ICpu
 {

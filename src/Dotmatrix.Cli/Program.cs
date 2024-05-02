@@ -1,4 +1,4 @@
-﻿namespace Dotmatrix.Cli;
+﻿namespace DotMatrix.Cli;
 
 class Program
 {

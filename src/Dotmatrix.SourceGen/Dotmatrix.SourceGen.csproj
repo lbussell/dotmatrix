@@ -6,6 +6,7 @@
 
     <IsRoslynComponent>true</IsRoslynComponent>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild> <!-- Generates a package at build -->
+    <NoPackageAnalysis>true</NoPackageAnalysis> <!-- I'm the only one using this package! -->
     <IncludeBuildOutput>false</IncludeBuildOutput> <!-- Do not include the generator as a lib dependency -->
   </PropertyGroup>
 

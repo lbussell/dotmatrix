@@ -1,4 +1,4 @@
-namespace Dotmatrix.Tests;
+namespace DotMatrix.Tests;
 
 public class IntegrationTests
 {

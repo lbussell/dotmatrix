@@ -1,4 +1,4 @@
-namespace Dotmatrix.SourceGen;
+namespace DotMatrix.SourceGen;
 
 using Model;
 

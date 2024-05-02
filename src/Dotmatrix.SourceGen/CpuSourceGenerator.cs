@@ -1,5 +1,7 @@
 ﻿
-namespace Dotmatrix.SourceGen;
+using DotMatrix.SourceGen.Model;
+
+namespace DotMatrix.SourceGen;
 
 using System.Collections.Immutable;
 using System.Text;
@@ -7,8 +9,8 @@ using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using Dotmatrix.SourceGen.Builders;
-using Dotmatrix.SourceGen.Model;
+using DotMatrix.SourceGen.Builders;
+using DotMatrix.SourceGen.Model;
 using System.Runtime.Serialization;
 using System.Diagnostics;
 

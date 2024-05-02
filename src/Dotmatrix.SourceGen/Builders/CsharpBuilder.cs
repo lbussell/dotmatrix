@@ -1,4 +1,4 @@
-﻿namespace Dotmatrix.SourceGen.Builders;
+﻿namespace DotMatrix.SourceGen.Builders;
 
 using System.Text;
 

@@ -1,4 +1,4 @@
-﻿namespace Dotmatrix;
+﻿namespace DotMatrix;
 
 public class Memory : IMemory
 {

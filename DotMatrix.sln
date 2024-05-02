@@ -5,13 +5,13 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{44C288C3-7C2B-4B6B-B09C-232BE93BA1E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotmatrix", "src\Dotmatrix\Dotmatrix.csproj", "{C0DEFCC8-3631-4D97-83C9-10C3224F9C9D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix", "src\DotMatrix\DotMatrix.csproj", "{C0DEFCC8-3631-4D97-83C9-10C3224F9C9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotmatrix.Cli", "src\Dotmatrix.Cli\Dotmatrix.Cli.csproj", "{82B8CA25-EB32-499E-95DC-871F0C7209CF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.Cli", "src\DotMatrix.Cli\DotMatrix.Cli.csproj", "{82B8CA25-EB32-499E-95DC-871F0C7209CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotmatrix.SourceGen", "src\Dotmatrix.SourceGen\Dotmatrix.SourceGen.csproj", "{644A22BB-1496-4043-94E3-FB2D6AC35EAA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.SourceGen", "src\DotMatrix.SourceGen\DotMatrix.SourceGen.csproj", "{644A22BB-1496-4043-94E3-FB2D6AC35EAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotmatrix.Tests", "src\Dotmatrix.Tests\Dotmatrix.Tests.csproj", "{092D1991-8D74-440A-BBB2-096390D9E4B8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.Tests", "src\DotMatrix.Tests\DotMatrix.Tests.csproj", "{092D1991-8D74-440A-BBB2-096390D9E4B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

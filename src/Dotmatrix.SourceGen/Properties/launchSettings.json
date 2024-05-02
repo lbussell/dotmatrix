@@ -3,7 +3,7 @@
   "profiles": {
     "Generators": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "../Dotmatrix/Dotmatrix.csproj"
+      "targetProject": "../DotMatrix/DotMatrix.csproj"
     }
   }
 }

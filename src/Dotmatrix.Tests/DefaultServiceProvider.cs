@@ -1,4 +1,4 @@
-﻿namespace Dotmatrix.Tests;
+﻿namespace DotMatrix.Tests;
 
 [ServiceProvider]
 [Import(typeof(IDefaultProviderModule))]

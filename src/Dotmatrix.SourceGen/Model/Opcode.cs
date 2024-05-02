@@ -1,3 +1,3 @@
-namespace Dotmatrix.SourceGen.Model;
+namespace DotMatrix.SourceGen.Model;
 
 public record Opcode(string Name);
