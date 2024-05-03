@@ -15,7 +15,7 @@ internal static class InstructionsGenerator
 
         builder = builder
             .OpenScope($"public partial class {data.MethodPath.ClassName}")
-            .OpenScope($"private partial CpuState {data.MethodPath.MethodName}(CpuState previousState)");
+            .OpenScope($"private static partial ValueTuple<CpuState, ExternalState> {data.MethodPath.MethodName}(CpuState cpuState, ExternalState externalState)");
 
         builder.AppendLine();
         builder.AppendLine("// Regular instructions");
@@ -32,7 +32,7 @@ internal static class InstructionsGenerator
         }
 
         builder.AppendLine();
-        builder.AppendLine("return previousState;");
+        builder.AppendLine("return (cpuState, externalState);");
         return builder.Build();
     }
 }
