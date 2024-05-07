@@ -13,10 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jab" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- From https://github.com/lbussell/gbops/blob/90b9bf296aed373335a0abbef0a0794a919b9f2c/dmgops.json -->
     <AdditionalFiles Include="dmgops.json" />
   </ItemGroup>

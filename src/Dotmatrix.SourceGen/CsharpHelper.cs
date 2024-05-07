@@ -2,7 +2,7 @@
 
 using Builders;
 
-internal static class ClassGenerator
+internal static class CsharpHelper
 {
     public static string CreateAttribute(string @namespace, string name) =>
         new CsharpBuilder().WithNamespace(@namespace)

@@ -4,4 +4,12 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine.DragonFruit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DotMatrix\DotMatrix.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,18 +1,12 @@
-﻿
-using DotMatrix.SourceGen.Model;
-
-namespace DotMatrix.SourceGen;
+﻿namespace DotMatrix.SourceGen;
 
 using System.Collections.Immutable;
-using System.Text;
 using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using DotMatrix.SourceGen.Builders;
-using DotMatrix.SourceGen.Model;
 using System.Runtime.Serialization;
-using System.Diagnostics;
+using DotMatrix.SourceGen.Model;
+using DotMatrix.SourceGen.Model.Generator;
 
 [Generator]
 public class CpuSourceGenerator : IIncrementalGenerator
@@ -22,22 +16,21 @@ public class CpuSourceGenerator : IIncrementalGenerator
         context.RegisterPostInitializationOutput(static postInitializationContext =>
             postInitializationContext.AddSource(
                 Names.GeneratedNamespace + Names.GeneratedExtension,
-                ClassGenerator.CreateAttribute(Names.GeneratedNamespace, Names.GeneratedAttribute)));
+                CsharpHelper.CreateAttribute(Names.GeneratedNamespace, Names.GeneratedAttribute)));
 
-        IncrementalValueProvider<ImmutableArray<DmgOps>> opcodesPipeline =
-            context.AdditionalTextsProvider
-                .Where(static (text) => text.Path.EndsWith(".json"))
-                .Select(static (text, ct) => GetInstructions(text, ct))
-                .Collect();
+        IncrementalValueProvider<ImmutableArray<DmgOps>> opcodesPipeline = context.AdditionalTextsProvider
+            .Where(static (text) => text.Path.EndsWith("dmgops.json"))
+            .Select(static (text, ct) => SerializeDmgOps(text, ct))
+            .Collect();
 
-        IncrementalValuesProvider<MethodPath> generatedAttributePipeline =
+        IncrementalValuesProvider<MethodInfo> generatedAttributePipeline =
             context.SyntaxProvider.ForAttributeWithMetadataName(
                 fullyQualifiedMetadataName: $"{Names.GeneratedNamespace}.{Names.GeneratedAttribute}",
                 predicate: static (syntaxNode, cancellationToken) => syntaxNode is BaseMethodDeclarationSyntax,
                 transform: static (context, cancellationToken) =>
                 {
-                    var containingClass = context.TargetSymbol.ContainingType;
-                    return new MethodPath(
+                    INamedTypeSymbol? containingClass = context.TargetSymbol.ContainingType;
+                    return new MethodInfo(
                         Namespace: containingClass.ContainingNamespace?.ToDisplayString(
                             SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(
                                 SymbolDisplayGlobalNamespaceStyle.Omitted))
@@ -46,23 +39,26 @@ public class CpuSourceGenerator : IIncrementalGenerator
                         MethodName: context.TargetSymbol.Name);
                 });
 
-        var instructionPipeline = generatedAttributePipeline.Combine(opcodesPipeline)
+        IncrementalValuesProvider<InstructionsData> instructionPipeline = generatedAttributePipeline
+            .Combine(opcodesPipeline)
             .Select((pair, _) => GetInstructionData(pair));
 
-        context.RegisterSourceOutput(instructionPipeline, InstructionsGenerator.GenerateInstructions);
+        context.RegisterSourceOutput(instructionPipeline, InstructionsHelper.GenerateAllInstructions);
     }
 
-    private static InstructionsData GetInstructionData((MethodPath MethodPath, ImmutableArray<DmgOps> Instructions) pair)
+    private static InstructionsData GetInstructionData(
+        (MethodInfo MethodPath, ImmutableArray<DmgOps> Instructions) pair)
     {
         if (pair.Instructions.Length > 1)
         {
-            throw new InvalidDataException("Found more than one opcode json file. Only one input is supported");
+            throw new InvalidDataException(
+                "Found more than one opcode json file. Only one input is supported");
         }
 
         return new InstructionsData(pair.MethodPath, pair.Instructions.First());
     }
 
-    private static DmgOps GetInstructions(AdditionalText text, CancellationToken ct) =>
+    private static DmgOps SerializeDmgOps(AdditionalText text, CancellationToken ct) =>
         JsonSerializer.Deserialize<DmgOps>(text.GetText(ct)?.ToString() ?? "")
             ?? throw new SerializationException("Got null when deserializing instructions.");
 }

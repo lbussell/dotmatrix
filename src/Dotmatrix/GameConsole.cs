@@ -1,8 +1,20 @@
 ﻿namespace DotMatrix;
 
-public sealed class GameConsole : IGameConsole
+public interface IGameConsole
 {
-    public GameConsole(IBus bus, ICpu cpu, IMemory memory)
+    void Start();
+}
+
+public sealed class GameConsole(
+    IBus bus,
+    ICpu cpu,
+    IMemory memory) : IGameConsole
+{
+    private readonly IBus _bus = bus;
+    private readonly IMemory _memory = memory;
+
+    public void Start()
     {
+        cpu.ExecuteFrames();
     }
 }
