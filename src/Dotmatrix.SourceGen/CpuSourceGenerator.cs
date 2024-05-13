@@ -1,12 +1,10 @@
-﻿namespace DotMatrix.SourceGen;
-
-using System.Collections.Immutable;
-using System.Text.Json;
-using Microsoft.CodeAnalysis;
+﻿using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Runtime.Serialization;
-using DotMatrix.SourceGen.Model;
+using Microsoft.CodeAnalysis;
 using DotMatrix.SourceGen.Model.Generator;
+using DotMatrix.SourceGen.Model.Instructions;
+
+namespace DotMatrix.SourceGen;
 
 [Generator]
 public class CpuSourceGenerator : IIncrementalGenerator
@@ -20,14 +18,14 @@ public class CpuSourceGenerator : IIncrementalGenerator
 
         IncrementalValueProvider<ImmutableArray<DmgOps>> opcodesPipeline = context.AdditionalTextsProvider
             .Where(static (text) => text.Path.EndsWith("dmgops.json"))
-            .Select(static (text, ct) => SerializeDmgOps(text, ct))
+            .Select(static (text, ct) => DmgOps.FromJson(text.GetText(ct)?.ToString()))
             .Collect();
 
         IncrementalValuesProvider<MethodInfo> generatedAttributePipeline =
             context.SyntaxProvider.ForAttributeWithMetadataName(
                 fullyQualifiedMetadataName: $"{Names.GeneratedNamespace}.{Names.GeneratedAttribute}",
-                predicate: static (syntaxNode, cancellationToken) => syntaxNode is BaseMethodDeclarationSyntax,
-                transform: static (context, cancellationToken) =>
+                predicate: static (syntaxNode, _) => syntaxNode is BaseMethodDeclarationSyntax,
+                transform: static (context, _) =>
                 {
                     INamedTypeSymbol? containingClass = context.TargetSymbol.ContainingType;
                     return new MethodInfo(
@@ -39,14 +37,14 @@ public class CpuSourceGenerator : IIncrementalGenerator
                         MethodName: context.TargetSymbol.Name);
                 });
 
-        IncrementalValuesProvider<InstructionsData> instructionPipeline = generatedAttributePipeline
+        IncrementalValuesProvider<InstructionGenerationData> instructionPipeline = generatedAttributePipeline
             .Combine(opcodesPipeline)
             .Select((pair, _) => GetInstructionData(pair));
 
         context.RegisterSourceOutput(instructionPipeline, InstructionsHelper.GenerateAllInstructions);
     }
 
-    private static InstructionsData GetInstructionData(
+    private static InstructionGenerationData GetInstructionData(
         (MethodInfo MethodPath, ImmutableArray<DmgOps> Instructions) pair)
     {
         if (pair.Instructions.Length > 1)
@@ -55,10 +53,6 @@ public class CpuSourceGenerator : IIncrementalGenerator
                 "Found more than one opcode json file. Only one input is supported");
         }
 
-        return new InstructionsData(pair.MethodPath, pair.Instructions.First());
+        return new InstructionGenerationData(pair.MethodPath, pair.Instructions.First());
     }
-
-    private static DmgOps SerializeDmgOps(AdditionalText text, CancellationToken ct) =>
-        JsonSerializer.Deserialize<DmgOps>(text.GetText(ct)?.ToString() ?? "")
-            ?? throw new SerializationException("Got null when deserializing instructions.");
 }

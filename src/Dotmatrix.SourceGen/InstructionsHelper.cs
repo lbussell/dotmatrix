@@ -1,10 +1,10 @@
-
-namespace DotMatrix.SourceGen;
-
 using Microsoft.CodeAnalysis;
 using DotMatrix.SourceGen.Builders;
 using DotMatrix.SourceGen.Model;
 using DotMatrix.SourceGen.Model.Generator;
+using DotMatrix.SourceGen.Model.Instructions;
+
+namespace DotMatrix.SourceGen;
 
 internal static class InstructionsHelper
 {
@@ -17,7 +17,7 @@ internal static class InstructionsHelper
     private const string MethodSignatureFormatString =
         "private partial ValueTuple<CpuState, ExternalState> {0}(CpuState cpuState, ExternalState externalState)";
 
-    public static void GenerateAllInstructions(SourceProductionContext ctx, InstructionsData data) =>
+    public static void GenerateAllInstructions(SourceProductionContext ctx, InstructionGenerationData data) =>
         ctx.AddSource(data.MethodInfo.ClassName + Names.GeneratedExtension, GenerateAllInstructionsInternal(data));
 
     private static CsharpBuilder AddOpeningBoilerplate(this CsharpBuilder builder, MethodInfo method) => builder
@@ -32,7 +32,7 @@ internal static class InstructionsHelper
 
     private static string Read8(bool inc = false) => $"{Bus}[{PC}{(inc ? "++" : "")}]";
 
-    private static string GenerateAllInstructionsInternal(InstructionsData data)
+    private static string GenerateAllInstructionsInternal(InstructionGenerationData data)
     {
         CsharpBuilder builder = new CsharpBuilder().AddOpeningBoilerplate(data.MethodInfo);
 

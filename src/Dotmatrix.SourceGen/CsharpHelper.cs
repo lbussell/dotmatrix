@@ -1,6 +1,6 @@
-﻿namespace DotMatrix.SourceGen;
+﻿using DotMatrix.SourceGen.Builders;
 
-using Builders;
+namespace DotMatrix.SourceGen;
 
 internal static class CsharpHelper
 {
