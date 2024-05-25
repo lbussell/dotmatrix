@@ -3,6 +3,7 @@ using DotMatrix.SourceGen.Builders;
 using DotMatrix.SourceGen.Model;
 using DotMatrix.SourceGen.Model.Generator;
 using DotMatrix.SourceGen.Model.Instructions;
+using DotMatrix.SourceGen.ViewModel;
 
 namespace DotMatrix.SourceGen;
 
@@ -43,7 +44,8 @@ internal static class InstructionsHelper
         builder.AppendLine("// Regular instructions");
         foreach (Opcode opcode in data.Instructions.Unprefixed)
         {
-            builder.AppendLine($"// {opcode.Name}");
+            builder.AppendLine("// " + opcode.Name);
+            builder.AppendLine("// " + InstructionsConverter.FromOpcode(opcode).GenerateSource());
         }
 
         builder.AppendLine();
