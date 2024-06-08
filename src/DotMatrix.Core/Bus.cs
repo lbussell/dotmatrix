@@ -31,7 +31,7 @@ internal class Bus
         set => MMap(key)[key] = value;
     }
 
-    private byte[] MMap(ushort address) => address switch
+    public byte[] MMap(ushort address) => address switch
         {
             <= BootRomEnd when _bootRomIsAttached => _bios!,
             <= RomBankEnd => _rom,

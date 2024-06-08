@@ -1,9 +1,101 @@
+using System.Diagnostics;
+
 namespace DotMatrix.Core;
 
 internal partial class Cpu
 {
-    // returns: number of cycles elapsed
     private int Step()
+    {
+        byte opcode = _bus[_cpuState.PC++];
+        Console.WriteLine($"Read ${opcode:X2}");
+
+        return GetBlock(opcode) switch
+        {
+            0 => StepBlock0(opcode),
+            1 => StepBlock1(opcode),
+            2 => StepBlock2(opcode),
+            _ => StepBlock3(opcode),
+        };
+    }
+
+    private static byte GetBlock(byte opcode) =>
+        (byte)((opcode & 0b_1100_0000) >> 6);
+
+    private int StepBlock0(byte opcode)
+    {
+        if (opcode == 0)
+        {
+            return NoOp();
+        }
+        if (opcode == 0b_0001_0000)
+        {
+            return Stop();
+        }
+
+        return NotImplemented(opcode);
+
+        // return (opcode & 0x0F) switch
+        // {
+        //     0b0001 => NotImplemented(opcode),
+        //     0b0010 => NotImplemented(opcode),
+        //     0b1010 => NotImplemented(opcode),
+        //     0b1000 => NotImplemented(opcode),
+        //
+        //     0b0011 => NotImplemented(opcode),
+        //     0b1011 => NotImplemented(opcode),
+        //     0b1001 => NotImplemented(opcode),
+        // };
+    }
+
+    private int StepBlock1(byte opcode)
+    {
+        int cycles = 4;
+
+        byte target = (byte)(opcode & 0b_0011_1000 >> 3);
+        byte source = (byte)(opcode & 0b_0000_0111);
+
+        if (target == 6)
+        {
+            cycles += 4;
+        }
+
+        if (source == 6)
+        {
+            cycles += 4;
+        }
+
+        if (target == 6 && source == 6)
+        {
+            return Halt();
+        }
+
+        return Load8ToRegister(ref DecodeR8(target), DecodeR8(source), cycles);
+    }
+
+    private int StepBlock2(byte opcode)
+    {
+        byte r8 = DecodeR8((byte)(opcode & 0b_00000111));
+        int instr = (opcode & 0b_00111000) >> 3;
+        return instr switch
+        {
+            0b_000 => Add(r8),
+            0b_001 => Adc(r8),
+            0b_010 => Sub(r8),
+            0b_011 => Sbc(r8),
+            0b_100 => And(r8),
+            0b_101 => Xor(r8),
+            0b_110 => Or(r8),
+            /* 0b_111 */ _ => Cp(r8),
+        };
+    }
+
+    private int StepBlock3(byte opcode)
+    {
+        return NotImplemented(opcode);
+    }
+
+    // returns: number of cycles elapsed
+    private int Step_Old()
     {
         byte op = _bus[_cpuState.PC++];
         Console.WriteLine($"Ex ${op:X2}");
@@ -12,7 +104,7 @@ internal partial class Cpu
         {
             0xCB => CBPrefix(ReadInc8()),
 
-            0x00 => NotImplemented(--_cpuState.PC, op),
+            0x00 => NoOp(),
             0x01 => NotImplemented(--_cpuState.PC, op),
             0x02 => Load8ToMemory(_cpuState.BC, _cpuState.A),
             0x03 => NotImplemented(--_cpuState.PC, op),
@@ -227,7 +319,7 @@ internal partial class Cpu
             0xC8 => NotImplemented(--_cpuState.PC, op),
             0xC9 => NotImplemented(--_cpuState.PC, op),
             0xCA => NotImplemented(--_cpuState.PC, op),
-            // 0xCB => NotImplemented(--_cpuState.PC, op),
+            // 0xCB reserved for prefix instructions (case defined above)
             0xCC => NotImplemented(--_cpuState.PC, op),
             0xCD => NotImplemented(--_cpuState.PC, op),
             0xCE => NotImplemented(--_cpuState.PC, op),
@@ -260,7 +352,7 @@ internal partial class Cpu
             0xE7 => NotImplemented(--_cpuState.PC, op),
             0xE8 => NotImplemented(--_cpuState.PC, op),
             0xE9 => NotImplemented(--_cpuState.PC, op),
-            0xEA => NotImplemented(--_cpuState.PC, op),
+            0xEA => Load8ToMemory(Immediate16(), _cpuState.A, 16),
             0xEB => NotImplemented(--_cpuState.PC, op),
             0xEC => NotImplemented(--_cpuState.PC, op),
             0xED => NotImplemented(--_cpuState.PC, op),
@@ -277,7 +369,7 @@ internal partial class Cpu
             0xF7 => NotImplemented(--_cpuState.PC, op),
             0xF8 => NotImplemented(--_cpuState.PC, op),
             0xF9 => NotImplemented(--_cpuState.PC, op),
-            0xFA => NotImplemented(--_cpuState.PC, op),
+            0xFA => Load8ToRegister(ref _cpuState.A, Indirect(Immediate16()), 16),
             0xFB => NotImplemented(--_cpuState.PC, op),
             0xFC => NotImplemented(--_cpuState.PC, op),
             0xFD => NotImplemented(--_cpuState.PC, op),
@@ -563,8 +655,4 @@ internal partial class Cpu
             0xFF => NotImplemented(--_cpuState.PC, op),
         };
     }
-
-    private static int NotImplemented(ushort address, byte opcode) =>
-        throw new NotImplementedException(
-            $"Encountered un-implemented opcode ${opcode:X2} at address ${address:X4}");
 }
