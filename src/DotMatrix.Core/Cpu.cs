@@ -1,14 +1,12 @@
 namespace DotMatrix.Core;
 
-internal record struct ExtCpuState(
-    long Cycles,
-    int CyclesSinceLastFrame);
-
-internal partial class Cpu(Bus bus)
+internal class Cpu(Bus bus, OpcodeHandler<int> opcodeHandler)
 {
+    private readonly Bus _bus = bus;
+    private readonly OpcodeHandler<int> _opcodeHandler = opcodeHandler;
+
     private CpuState _cpuState;
     private ExtCpuState _extCpuState;
-    private Bus _bus = bus;
 
     public void Run(int cycles)
     {
@@ -23,13 +21,14 @@ internal partial class Cpu(Bus bus)
         }
     }
 
-    private byte ReadInc8()
+    private int Step()
     {
-        return _bus[_cpuState.PC++];
+        byte opcode = _bus[_cpuState.PC++];
+        Console.WriteLine($"Read ${opcode:X2}");
+
+        return _opcodeHandler.HandleOpcode(opcode, ref _cpuState);
     }
 
-    private ushort ReadInc16()
-    {
-        throw new NotImplementedException();
-    }
+    private static byte GetBlock(byte opcode) =>
+        (byte)((opcode & 0b_1100_0000) >> 6);
 }

@@ -1,0 +1,5 @@
+[submodule "src/DotMatrix.Core.Tests/CpuTestData"]
+	path = src/DotMatrix.Core.Tests/CpuTestData
+	url = https://github.com/lbussell/GameboyCPUTests
+[submodule "./CpuTestData"]
+	branch = remove-v1

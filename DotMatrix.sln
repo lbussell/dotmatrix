@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.Cli", "src\DotMat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.Core", "src\DotMatrix.Core\DotMatrix.Core.csproj", "{FF9F4559-9E42-48DD-A345-83D5FE7358FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotMatrix.Core.Tests", "src\DotMatrix.Core.Tests\DotMatrix.Core.Tests.csproj", "{AC1A96BF-8008-4099-9B1C-AD97C6680513}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +28,14 @@ Global
 		{FF9F4559-9E42-48DD-A345-83D5FE7358FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF9F4559-9E42-48DD-A345-83D5FE7358FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF9F4559-9E42-48DD-A345-83D5FE7358FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC1A96BF-8008-4099-9B1C-AD97C6680513}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC1A96BF-8008-4099-9B1C-AD97C6680513}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC1A96BF-8008-4099-9B1C-AD97C6680513}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC1A96BF-8008-4099-9B1C-AD97C6680513}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1B3552C0-EA21-4033-A6BE-3D5B709AFC56} = {4125F8C3-79DB-41C4-9EF2-3797FF01C420}
 		{FF9F4559-9E42-48DD-A345-83D5FE7358FA} = {4125F8C3-79DB-41C4-9EF2-3797FF01C420}
+		{AC1A96BF-8008-4099-9B1C-AD97C6680513} = {4125F8C3-79DB-41C4-9EF2-3797FF01C420}
 	EndGlobalSection
 EndGlobal

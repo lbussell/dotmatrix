@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace DotMatrix.Core;
 
 [StructLayout(LayoutKind.Explicit)]
-internal record struct CpuState
+public record struct CpuState
 {
     [FieldOffset(0)]
     public ushort AF;

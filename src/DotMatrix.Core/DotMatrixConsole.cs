@@ -13,8 +13,11 @@ public class DotMatrixConsole
 
     public static DotMatrixConsole CreateInstance(byte[] bios, byte[] rom)
     {
-        Bus bus = new Bus(bios, rom);
-        Cpu cpu = new Cpu(bus);
+        Bus bus = new(bios, rom);
+
+        OpcodeHandler<int> opcodeHandler = new(new CpuInstructionHandler());
+        Cpu cpu = new(bus, opcodeHandler);
+
         return new DotMatrixConsole(cpu, bus);
     }
 
