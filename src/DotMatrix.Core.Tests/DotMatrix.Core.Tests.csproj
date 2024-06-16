@@ -25,4 +25,11 @@
       <ProjectReference Include="..\DotMatrix.Core\DotMatrix.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="CpuTestData\v2\*.json">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+        
+    </ItemGroup>
+
 </Project>
