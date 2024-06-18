@@ -1,152 +1,274 @@
 namespace DotMatrix.Core;
 
-/// <summary>
-/// Handles mapping of opcodes to instructions.
-/// </summary>
-public class OpcodeHandler<TResult>(IInstructionHandler<TResult> instructionHandler)
+public class OpcodeHandler
 {
-    private readonly IInstructionHandler<TResult> _instructionHandler = instructionHandler;
+    private delegate void Instruction(ref CpuState state, IBus bus);
 
-    public TResult HandleOpcode(byte opcode, ref CpuState state)
+    private static readonly Instruction[] s_instructions =
+    [
+        NoOp,       Load16,     Load8,      Inc16,      Inc8,       Dec8,       Load8,      Rlca,
+        Load16,     Add16,      Load8,      Dec16,      Inc8,       Dec8,       Load8,      Rrca,
+        Stop,       Load16,     Load8,      Inc16,      Inc8,       Dec8,       Load8,      Rla,
+        Jr,         Add16,      Load8,      Dec16,      Inc8,       Dec8,       Load8,      Rra,
+        Jr,         Load16,     Load8,      Inc16,      Inc8,       Dec8,       Load8,      Daa,
+        Jr,         Add16,      Load8,      Dec16,      Inc8,       Dec8,       Load8,      Cpl,
+        Jr,         Load16,     Load8,      Inc16,      Inc8,       Dec8,       Load8,      Scf,
+        Jr,         Add16,      Load8,      Dec16,      Inc8,       Dec8,       Load8,      Ccf,
+
+        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
+        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
+        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
+        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
+        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
+        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
+        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Halt,       Load8,
+        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
+
+        Add,        Add,        Add,        Add,        Add,        Add,        Add,        Add,
+        Adc,        Adc,        Adc,        Adc,        Adc,        Adc,        Adc,        Adc,
+        Sub,        Sub,        Sub,        Sub,        Sub,        Sub,        Sub,        Sub,
+        Sbc,        Sbc,        Sbc,        Sbc,        Sbc,        Sbc,        Sbc,        Sbc,
+        And,        And,        And,        And,        And,        And,        And,        And,
+        Xor,        Xor,        Xor,        Xor,        Xor,        Xor,        Xor,        Xor,
+        Or,         Or,         Or,         Or,         Or,         Or,         Or,         Or,
+        Cp,         Cp,         Cp,         Cp,         Cp,         Cp,         Cp,         Cp,
+
+        Ret,        Pop,        Jp,         Jp,         Call,       Push,       Add,        Rst,
+        Ret,        Ret,        Jp,         Cb,         Call,       Call,       Adc,        Rst,
+        Ret,        Pop,        Jp,         Undef,      Call,       Push,       Sub,        Rst,
+        Ret,        Reti,       Jp,         Undef,      Call,       Undef,      Sbc,        Rst,
+        Load8,      Pop,        Load8,      Undef,      Undef,      Push,       And,        Rst,
+        Add16,      Jp,         Load8,      Undef,      Undef,      Undef,      Xor,        Rst,
+        Load8,      Pop,        Load8,      Di,         Undef,      Push,       Or,         Rst,
+        Add16,      Reti,       Load8,      Di,         Undef,      Undef,      Cp,         Rst,
+    ];
+
+    public void HandleOpcode(ref CpuState state, IBus bus)
     {
-        return GetBlock(opcode) switch
-        {
-            0 => StepBlock0(opcode, ref state),
-            1 => StepBlock1(opcode, ref state),
-            2 => StepBlock2(opcode, ref state),
-            _ => StepBlock3(opcode, ref state),
-        };
+        s_instructions[state.Ir](ref state, bus);
     }
 
-    private static byte GetBlock(byte opcode) =>
-        (byte)((opcode & 0b_1100_0000) >> 6);
-
-    private TResult StepBlock0(byte opcode, ref CpuState state)
+    private static void Cb(ref CpuState state, IBus bus)
     {
-        if (opcode == 0)
+        state.IrIsCb = true;
+        throw new NotImplementedException();
+    }
+
+    private static void Di(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Reti(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Push(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Call(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Jp(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Pop(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Ret(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Cp(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Or(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Xor(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Ccf(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Scf(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Cpl(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Daa(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Halt(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Sbc(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void And(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Rra(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Rla(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Adc(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Sub(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Rlca(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Undef(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Rst(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Rrca(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Dec8(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Dec16(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Add16(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Stop(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Jr(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Add(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Inc8(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Inc16(ref CpuState state, IBus bus)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Load8(ref CpuState state, IBus bus)
+    {
+        if ((state.Ir & 0b_1100_0000) >> 6 == 0b_01)
         {
-            return _instructionHandler.Nop(opcode, ref state);
+            byte source = DecodeR8(ref state, (byte)(state.Ir & 0b00000111));
+            ref byte dest = ref DecodeR8(ref state, (byte)(state.Ir & 0b00111000 >> 3));
+            state.TCycles += Load8Internal(ref dest, source);
+            return;
         }
 
-        return (opcode & 0x0F) switch
-        {
-            0b_0001 => _instructionHandler.NotImplemented("ld r16, imm16"),
-            0b_0010 => _instructionHandler.NotImplemented("ld [r16mem], a"),
-            0b_1010 => _instructionHandler.NotImplemented("ld a, [r16mem]"),
-            0b_1000 => _instructionHandler.NotImplemented("ld [imm16], sp"),
-
-            0b_0011 => _instructionHandler.NotImplemented("ld [imm16], sp"),
-            0b_1011 => _instructionHandler.NotImplemented("ld [imm16], sp"),
-            0b_1001 => _instructionHandler.NotImplemented("ld [imm16], sp"),
-            _ => _instructionHandler.NotImplemented(opcode, state),
-        };
+        throw new NotImplementedException();
     }
 
-    private TResult StepBlock1(byte opcode, ref CpuState state)
+    private static int Load8Internal(ref byte dest, byte source)
     {
-        int cycles = 4;
-
-        byte target = (byte)(opcode & 0b_0011_1000 >> 3);
-        byte source = (byte)(opcode & 0b_0000_0111);
-
-        if (target == 6)
-        {
-            cycles += 4;
-        }
-
-        if (source == 6)
-        {
-            cycles += 4;
-        }
-
-        if (target == 6 && source == 6)
-        {
-            return _instructionHandler.Halt(opcode, ref state);
-        }
-
-        return _instructionHandler.NotImplemented(opcode, state);
-
-        // return _instructionHandler.Load8ToRegister(
-        //     ref DecodeR8(target), DecodeR8(source), cycles);
+        dest = source;
+        return 4;
     }
 
-    private TResult StepBlock2(byte opcode, ref CpuState state)
+    private static void Load16(ref CpuState state, IBus bus)
     {
-        return _instructionHandler.NotImplemented(opcode, state);
-
-        // byte r8 = DecodeR8((byte)(opcode & 0b_00000111));
-        // int instr = (opcode & 0b_00111000) >> 3;
-        // return instr switch
-        // {
-        //     0b_000 => Add(r8),
-        //     0b_001 => Adc(r8),
-        //     0b_010 => Sub(r8),
-        //     0b_011 => Sbc(r8),
-        //     0b_100 => And(r8),
-        //     0b_101 => Xor(r8),
-        //     0b_110 => Or(r8),
-        //     /* 0b_111 */ _ => Cp(r8),
-        // };
+        throw new NotImplementedException();
     }
 
-    private TResult StepBlock3(byte opcode, ref CpuState state)
+    private static void NoOp(ref CpuState state, IBus bus)
     {
-        return _instructionHandler.NotImplemented(opcode, state);
+        state.TCycles += 4;
     }
 
-    // private ref byte DecodeR8(byte b)
-    // {
-    //     switch (b)
-    //     {
-    //         case 0:
-    //             return ref _cpuState.B;
-    //         case 1:
-    //             return ref _cpuState.C;
-    //         case 2:
-    //             return ref _cpuState.D;
-    //         case 3:
-    //             return ref _cpuState.E;
-    //         case 4:
-    //             return ref _cpuState.H;
-    //         case 5:
-    //             return ref _cpuState.L;
-    //         case 6:
-    //             return ref IndirectRef(_cpuState.HL);
-    //         case 7:
-    //         default:
-    //             return ref _cpuState.A;
-    //     }
-    // }
-    //
-    // private ref ushort DecodeR16(byte b)
-    // {
-    //     switch (b)
-    //     {
-    //         case 0:
-    //             return ref _cpuState.BC;
-    //         case 1:
-    //             return ref _cpuState.DE;
-    //         case 2:
-    //             return ref _cpuState.HL;
-    //         case 3:
-    //         default:
-    //             return ref _cpuState.SP;
-    //     }
-    // }
-    //
-    // private ref ushort DecodeR16Stack(byte b)
-    // {
-    //     switch (b)
-    //     {
-    //         case 0:
-    //             return ref _cpuState.BC;
-    //         case 1:
-    //             return ref _cpuState.DE;
-    //         case 2:
-    //             return ref _cpuState.HL;
-    //         case 3:
-    //         default:
-    //             return ref _cpuState.AF;
-    //     }
-    // }
+    private static ref byte DecodeR8(ref CpuState state, byte b)
+    {
+        switch (b)
+        {
+            case 0:
+                return ref state.B;
+            case 1:
+                return ref state.C;
+            case 2:
+                return ref state.D;
+            case 3:
+                return ref state.E;
+            case 4:
+                return ref state.H;
+            case 5:
+                return ref state.L;
+            case 6:
+                throw new NotImplementedException();
+            // case 7:
+            default:
+                return ref state.A;
+        }
+    }
 }

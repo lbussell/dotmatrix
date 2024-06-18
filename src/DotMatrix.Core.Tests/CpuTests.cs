@@ -1,67 +1,70 @@
-using System.Runtime.Serialization;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Xunit.Abstractions;
 
 namespace DotMatrix.Core.Tests;
 
 using System.Collections.Generic;
 
-public class CpuTests
+public class CpuTests(ITestOutputHelper testOutputHelper)
 {
-    private readonly ITestOutputHelper _testOutputHelper;
-    private const string TestDataDir = "CpuTestData/v2/";
+    private readonly ITestOutputHelper _testOutputHelper = testOutputHelper;
 
-    private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    };
+    public static IEnumerable<object[]> GetTestData(int opcode) => CpuTestData.GetTestData(opcode);
 
-    public CpuTests(ITestOutputHelper testOutputHelper)
+    private class LoggingBus(IDictionary<ushort, byte> ram) : IBus
     {
-        _testOutputHelper = testOutputHelper;
+        private readonly IDictionary<ushort, byte> _ram = ram;
+
+        public List<CpuLog> Log { get; } = [];
+
+        public byte this[ushort address]
+        {
+            get => Get(address);
+            set => Set(address, value);
+        }
+
+        private byte Get(ushort address)
+        {
+            byte value = _ram[address];
+            Log.Add(new CpuLog(address, value, ActivityType.Read));
+            return value;
+        }
+
+        private void Set(ushort address, byte value)
+        {
+            _ram[address] = value;
+            Log.Add(new CpuLog(address, value, ActivityType.Write));
+        }
     }
 
-    public static IEnumerable<object[]> GetTestData() => GetTestDataInternal();
-
-    private static IEnumerable<object[]> GetTestDataInternal() =>
-        GetAllTestData()
-            .SelectMany(d => d)
-            .Select(d => new []{ d });
-
-    private static IEnumerable<IEnumerable<CpuTestData>> GetAllTestData() =>
-        Directory.GetFiles(TestDataDir).Select(ReadTestDataFromFile);
-
-    private static IEnumerable<CpuTestData> ReadTestDataFromFile(string filePath)
+    private static void ExecuteTest(byte opcode, CpuTestData testData)
     {
-        Console.WriteLine($"r {filePath}");
-        return JsonSerializer.Deserialize<IEnumerable<CpuTestData>>(File.ReadAllText(filePath), jsonOptions)
-            ?? throw new Exception($"Got null when deserializing {filePath}");
+        // set up cpu
+        LoggingBus bus = new(testData.Initial.GetTestRam());
+        CpuState initialState = testData.Initial.ToCpuState();
+        initialState.Ir = opcode;
+        Cpu cpu = new(bus, new OpcodeHandler(), initialState);
+
+        int tCycles = testData.Cycles.Length * 4;
+        while (cpu.State.TCycles < tCycles)
+        {
+            cpu.Step();
+        }
+
+        VerifyCpuLogs(testData.GetCpuLog(), bus.Log);
     }
 
-    [Theory]
-    [MemberData(nameof(GetTestData))]
-    public void Test1(CpuTestData testData)
+    private static void VerifyCpuLogs(IEnumerable<CpuLog?> expected, IEnumerable<CpuLog> actual)
     {
-        _testOutputHelper.WriteLine(testData.Name);
+        expected = expected.Where(e => e is not null);
+        IEnumerable<(CpuLog Expected, CpuLog Actual)> logs = expected.Zip(actual)!;
+
+        foreach ((CpuLog Expected, CpuLog Actual) log in logs)
+        {
+            log.Expected.Should().BeEquivalentTo(log.Actual);
+        }
     }
+
+    [Theory, MemberData(nameof(GetTestData), 0x00)]
+    public void NoOp(byte opcode, CpuTestData testData) => ExecuteTest(opcode, testData);
 }
-
-public record CpuTestData(
-    string Name,
-    CpuTestState Initial,
-    CpuTestState Final,
-    JsonValue[][] Cycles);
-
-public record CpuTestState(
-    byte A,
-    byte B,
-    byte C,
-    byte D,
-    byte E,
-    byte F,
-    byte H,
-    byte L,
-    ushort Pc,
-    ushort Sp,
-    int[][] Ram);

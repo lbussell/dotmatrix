@@ -1,34 +1,39 @@
 namespace DotMatrix.Core;
 
-internal class Cpu(Bus bus, OpcodeHandler<int> opcodeHandler)
+internal class Cpu(IBus bus, OpcodeHandler opcodeHandler, CpuState initialState = new())
 {
-    private readonly Bus _bus = bus;
-    private readonly OpcodeHandler<int> _opcodeHandler = opcodeHandler;
+    private readonly IBus _bus = bus;
+    private readonly OpcodeHandler _opcodeHandler = opcodeHandler;
+    private CpuState _state = initialState;
 
-    private CpuState _cpuState;
-    private ExtCpuState _extCpuState;
+    internal CpuState State => _state;
 
     public void Run(int cycles)
     {
         RunInternal(cycles);
     }
 
-    private void RunInternal(int cycles)
+    /*
+     * One full cycle of "Decode, Execute, Fetch"
+     */
+    internal void Step()
     {
-        while (_extCpuState.Cycles < cycles)
+        // One decode-execute-fetch loop takes 4 T-Cycles (1 M-Cycle) for most instructions
+        // If an instruction takes more time than that, it will happen during the HandleOpcode call
+
+        _opcodeHandler.HandleOpcode(ref _state, _bus);
+
+        // The fetch happens simultaneously with the last M-Cycle of an instruction
+        // So don't add to the M-Cycles here since it was already accounted for in the instruction
+        _state.Ir = Fetch();
+    }
+
+    private void RunInternal(int tCycles)
+    {
+        while (_state.TCycles < tCycles)
         {
-            _extCpuState.Cycles += Step();
         }
     }
 
-    private int Step()
-    {
-        byte opcode = _bus[_cpuState.PC++];
-        Console.WriteLine($"Read ${opcode:X2}");
-
-        return _opcodeHandler.HandleOpcode(opcode, ref _cpuState);
-    }
-
-    private static byte GetBlock(byte opcode) =>
-        (byte)((opcode & 0b_1100_0000) >> 6);
+    private byte Fetch() => _bus[_state.Pc];
 }

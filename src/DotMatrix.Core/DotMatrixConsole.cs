@@ -15,7 +15,7 @@ public class DotMatrixConsole
     {
         Bus bus = new(bios, rom);
 
-        OpcodeHandler<int> opcodeHandler = new(new CpuInstructionHandler());
+        OpcodeHandler opcodeHandler = new();
         Cpu cpu = new(bus, opcodeHandler);
 
         return new DotMatrixConsole(cpu, bus);

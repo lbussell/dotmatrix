@@ -1,6 +1,11 @@
 namespace DotMatrix.Core;
 
-internal class Bus
+public interface IBus
+{
+    byte this[ushort key] { get; set; }
+}
+
+internal class Bus : IBus
 {
     #region MemoryMap
     private const int MemorySize = 0xFFFF;
@@ -14,9 +19,8 @@ internal class Bus
 
     private readonly byte[] _memory = new byte[MemorySize];
     private readonly byte[]? _bios;
-
-    private bool _bootRomIsAttached;
     private readonly byte[] _rom;
+    private bool _bootRomIsAttached;
 
     public Bus(byte[] rom, byte[]? bios = null)
     {
@@ -31,7 +35,7 @@ internal class Bus
         set => MMap(key)[key] = value;
     }
 
-    public byte[] MMap(ushort address) => address switch
+    private byte[] MMap(ushort address) => address switch
         {
             <= BootRomEnd when _bootRomIsAttached => _bios!,
             <= RomBankEnd => _rom,
