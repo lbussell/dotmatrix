@@ -45,8 +45,8 @@ public class CpuTests(ITestOutputHelper testOutputHelper)
         initialState.Ir = opcode;
         Cpu cpu = new(bus, new OpcodeHandler(), initialState);
 
-        int tCycles = testData.Cycles.Length * 4;
-        while (cpu.State.TCycles < tCycles)
+        int expectedTCycles = testData.Cycles.Length * 4;
+        while (cpu.State.TCycles < expectedTCycles)
         {
             cpu.Step();
         }
@@ -67,4 +67,7 @@ public class CpuTests(ITestOutputHelper testOutputHelper)
 
     [Theory, MemberData(nameof(GetTestData), 0x00)]
     public void NoOp(byte opcode, CpuTestData testData) => ExecuteTest(opcode, testData);
+
+    [Theory, MemberData(nameof(GetTestData), 0x40)]
+    public void Load8(byte opcode, CpuTestData testData) => ExecuteTest(opcode, testData);
 }
