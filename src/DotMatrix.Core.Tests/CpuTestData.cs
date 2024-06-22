@@ -1,5 +1,5 @@
-using System.Text.Json;
 using System.Text.Json.Nodes;
+using DotMatrix.Core.Tests.Model;
 
 namespace DotMatrix.Core.Tests;
 
@@ -11,15 +11,7 @@ public record CpuTestData(
 {
     private const string TestDataDir = "CpuTestData/v2/";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    };
-
-    public byte Opcode { get; set; }
-
-    public static IEnumerable<object[]> GetTestData(int opcode) =>
-        GetTestDataInternal((byte)opcode).Select(d => new object[] { (byte)opcode, d });
+    public byte Opcode { get; private init; }
 
     public IEnumerable<CpuLog?> GetCpuLog() =>
         Cycles.Select(cycleData =>
@@ -35,25 +27,43 @@ public record CpuTestData(
             return new CpuLog(address, value, type);
         });
 
-    private static ActivityType GetActivityType(string type) => type switch
+    public static IEnumerable<object[]> GetTestData(IEnumerable<int> opcodes) =>
+        GetTestDataInternal(opcodes).Select(testData => new object[] { testData });
+
+    private static CpuTestData FromModel(CpuTestDataModel model)
     {
-        "read" => ActivityType.Read,
-        "write" => ActivityType.Write,
-        _ => throw new ArgumentException(type),
-    };
+        CpuTestState initial = CpuTestState.FromModel(model.Initial);
+
+        int finalCycles = model.Cycles.Length * 4;
+        CpuTestState final = CpuTestState.FromModel(model.Final, finalCycles);
+
+        return new CpuTestData(model.Name, initial, final, model.Cycles);
+    }
+
+    private static ActivityType GetActivityType(string type) => type switch
+        {
+            "read" => ActivityType.Read,
+            "write" => ActivityType.Write,
+            _ => throw new ArgumentException(type),
+        };
+
+    private static IEnumerable<CpuTestData> GetTestDataInternal(IEnumerable<int> opcodes) =>
+        opcodes
+            .Select(o => (byte)o)
+            .Select(GetTestDataInternal)
+            .SelectMany(td => td);
 
     private static IEnumerable<CpuTestData> GetTestDataInternal(byte opcode) =>
-        ReadTestDataFromFile(opcode);
+        ReadTestDataFromFile(opcode)
+            .Select(testData => testData with { Opcode = opcode });
 
     private static IEnumerable<CpuTestData> ReadTestDataFromFile(byte opcode)
     {
-        string filePath = GetTestFilePath(opcode);
-        Console.WriteLine($"r {filePath}");
-        IEnumerable<CpuTestData> data = JsonSerializer.Deserialize<IEnumerable<CpuTestData>>(File.ReadAllText(filePath), JsonOptions)
-            ?? throw new Exception($"Got null when deserializing {filePath}");
-        return data;
+        return CpuTestDataModel
+            .FromJson(ReadTestDataFile(opcode))
+            .Select(FromModel);
     }
 
-    private static string GetTestFilePath(byte opcode) =>
-        Path.Combine(TestDataDir, $"{opcode:x2}.json");
-};
+    private static string ReadTestDataFile(byte opcode) =>
+        File.ReadAllText(Path.Combine(TestDataDir, $"{opcode:x2}.json"));
+}

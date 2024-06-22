@@ -1,7 +1,11 @@
+using System.Reflection.Metadata.Ecma335;
+
 namespace DotMatrix.Core;
 
 public class OpcodeHandler
 {
+    private const int MCycleLength = 4;
+
     private delegate void Instruction(ref CpuState state, IBus bus);
 
     private static readonly Instruction[] s_instructions =
@@ -221,21 +225,41 @@ public class OpcodeHandler
 
     private static void Load8(ref CpuState state, IBus bus)
     {
-        if ((state.Ir & 0b_1100_0000) >> 6 == 0b_01)
+        state.TCycles += MCycleLength;
+        int block = (state.Ir & 0b_1100_0000) >> 6;
+        switch (block)
         {
-            byte source = DecodeR8(ref state, (byte)(state.Ir & 0b00000111));
-            ref byte dest = ref DecodeR8(ref state, (byte)(state.Ir & 0b00111000 >> 3));
-            state.TCycles += Load8Internal(ref dest, source);
+            case 0b_00:
+                Load8Block0(ref state, bus);
+                break;
+            case 0b_01:
+                Load8Block1(ref state, bus);
+                break;
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    private static void Load8Block0(ref CpuState state, IBus bus)
+    {
+        if ((state.Ir & 0b_0000_0111) == 0b_110)
+        {
+            byte target = (byte)((state.Ir & 0b_0011_1000) >> 3);
+            byte value = Immediate8(ref state, bus);
+            SetR8(ref state, bus, value, target);
             return;
         }
-
         throw new NotImplementedException();
     }
 
-    private static int Load8Internal(ref byte dest, byte source)
+    private static void Load8Block1(ref CpuState state, IBus bus)
     {
-        dest = source;
-        return 4;
+        byte source = (byte)(state.Ir & 0b_0000_0111);
+        byte target = (byte)((state.Ir & 0b_0011_1000) >> 3);
+
+        SetR8(ref state, bus,
+            value: GetR8(ref state, bus, source),
+            target: target);
     }
 
     private static void Load16(ref CpuState state, IBus bus)
@@ -248,27 +272,67 @@ public class OpcodeHandler
         state.TCycles += 4;
     }
 
-    private static ref byte DecodeR8(ref CpuState state, byte b)
+    private static byte Immediate8(ref CpuState state, IBus bus)
     {
-        switch (b)
+        state.TCycles += MCycleLength;
+        return bus[state.Pc++];
+    }
+
+    private static byte GetR8(ref CpuState state, IBus bus, byte target)
+    {
+        return target switch
+        {
+            0 => state.B,
+            1 => state.C,
+            2 => state.D,
+            3 => state.E,
+            4 => state.H,
+            5 => state.L,
+            6 => IndirectGet(ref state, bus, state.HL),
+            _ => state.A,
+        };
+    }
+
+    private static void SetR8(ref CpuState state, IBus bus, byte value, byte target)
+    {
+        switch (target)
         {
             case 0:
-                return ref state.B;
+                state.B = value;
+                break;
             case 1:
-                return ref state.C;
+                state.C = value;
+                break;
             case 2:
-                return ref state.D;
+                state.D = value;
+                break;
             case 3:
-                return ref state.E;
+                state.E = value;
+                break;
             case 4:
-                return ref state.H;
+                state.H = value;
+                break;
             case 5:
-                return ref state.L;
-            case 6:
-                throw new NotImplementedException();
-            // case 7:
-            default:
-                return ref state.A;
+                state.L = value;
+                break;
+            case 6: // Special case for indirect HL
+                IndirectSet(ref state, bus, state.HL, value);
+                break;
+            default: // 7
+                state.A = value;
+                break;
         }
+    }
+
+    private static byte IndirectGet(ref CpuState state, IBus bus, ushort address)
+    {
+        state.TCycles += MCycleLength;
+        return bus[address];
+    }
+
+    private static void IndirectSet(ref CpuState state, IBus bus, ushort address, byte value)
+    {
+        state.TCycles += MCycleLength;
+        bus[address] = value;
     }
 }

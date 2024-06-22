@@ -9,40 +9,18 @@ public class CpuTests(ITestOutputHelper testOutputHelper)
 {
     private readonly ITestOutputHelper _testOutputHelper = testOutputHelper;
 
-    public static IEnumerable<object[]> GetTestData(int opcode) => CpuTestData.GetTestData(opcode);
+    // Uncomment to test specific opcodes for easier debugging
+    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0x0e ]);
 
-    private class LoggingBus(IDictionary<ushort, byte> ram) : IBus
-    {
-        private readonly IDictionary<ushort, byte> _ram = ram;
+    // Test all opcodes
+    public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData(GetImplementedOpcodes());
+    private static IEnumerable<int> GetImplementedOpcodes() => Util.GetImplementedOpcodesList();
 
-        public List<CpuLog> Log { get; } = [];
-
-        public byte this[ushort address]
-        {
-            get => Get(address);
-            set => Set(address, value);
-        }
-
-        private byte Get(ushort address)
-        {
-            byte value = _ram[address];
-            Log.Add(new CpuLog(address, value, ActivityType.Read));
-            return value;
-        }
-
-        private void Set(ushort address, byte value)
-        {
-            _ram[address] = value;
-            Log.Add(new CpuLog(address, value, ActivityType.Write));
-        }
-    }
-
-    private static void ExecuteTest(byte opcode, CpuTestData testData)
+    private static void ExecuteTest(CpuTestData testData)
     {
         // set up cpu
-        LoggingBus bus = new(testData.Initial.GetTestRam());
-        CpuState initialState = testData.Initial.ToCpuState();
-        initialState.Ir = opcode;
+        LoggingBus bus = new(testData.Initial.Ram);
+        CpuState initialState = testData.Initial.State with { Ir = testData.Opcode };
         Cpu cpu = new(bus, new OpcodeHandler(), initialState);
 
         int expectedTCycles = testData.Cycles.Length * 4;
@@ -52,6 +30,8 @@ public class CpuTests(ITestOutputHelper testOutputHelper)
         }
 
         VerifyCpuLogs(testData.GetCpuLog(), bus.Log);
+        cpu.State.Should().BeEquivalentTo(testData.Final.State,
+            options => options.Excluding(o => o.Ir));
     }
 
     private static void VerifyCpuLogs(IEnumerable<CpuLog?> expected, IEnumerable<CpuLog> actual)
@@ -65,9 +45,7 @@ public class CpuTests(ITestOutputHelper testOutputHelper)
         }
     }
 
-    [Theory, MemberData(nameof(GetTestData), 0x00)]
-    public void NoOp(byte opcode, CpuTestData testData) => ExecuteTest(opcode, testData);
-
-    [Theory, MemberData(nameof(GetTestData), 0x40)]
-    public void Load8(byte opcode, CpuTestData testData) => ExecuteTest(opcode, testData);
+    [Theory]
+    [MemberData(nameof(GetTestData))]
+    public void OpcodeTest(CpuTestData testData) => ExecuteTest(testData);
 }

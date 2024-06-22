@@ -6,6 +6,7 @@ internal class Cpu(IBus bus, OpcodeHandler opcodeHandler, CpuState initialState 
     private readonly OpcodeHandler _opcodeHandler = opcodeHandler;
     private CpuState _state = initialState;
 
+    // Needs to be internal so that state can be checked in tests
     internal CpuState State => _state;
 
     public void Run(int cycles)
@@ -14,17 +15,17 @@ internal class Cpu(IBus bus, OpcodeHandler opcodeHandler, CpuState initialState 
     }
 
     /*
-     * One full cycle of "Decode, Execute, Fetch"
+     * One full decode-execute-fetch cycle. Not always 4 T-Cycles
      */
     internal void Step()
     {
-        // One decode-execute-fetch loop takes 4 T-Cycles (1 M-Cycle) for most instructions
-        // If an instruction takes more time than that, it will happen during the HandleOpcode call
-
+        // Opcode handler is responsible for incrementing the T-cycles.
+        // A typical decode-execute-fetch loop takes 4 T-Cycles (1 M-Cycle) for most instructions
+        // If an instruction takes more time than that, it will also happen during the HandleOpcode call
         _opcodeHandler.HandleOpcode(ref _state, _bus);
 
         // The fetch happens simultaneously with the last M-Cycle of an instruction
-        // So don't add to the M-Cycles here since it was already accounted for in the instruction
+        // So don't add to cycles here since it was already accounted for in the instruction
         _state.Ir = Fetch();
     }
 
@@ -35,5 +36,5 @@ internal class Cpu(IBus bus, OpcodeHandler opcodeHandler, CpuState initialState 
         }
     }
 
-    private byte Fetch() => _bus[_state.Pc];
+    private byte Fetch() => _bus[_state.Pc++];
 }

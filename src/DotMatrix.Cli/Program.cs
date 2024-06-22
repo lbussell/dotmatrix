@@ -11,40 +11,19 @@ class Program
         // DotMatrixConsole c = DotMatrixConsole.CreateInstance(biosData, romData);
         // c.Run();
 
-        RenderOpcodeTable(TestOpcodes());
+        RenderOpcodeTable(Util.GetImplementedOpcodesArray());
     }
 
-    private static bool[] TestOpcodes()
+    private static void RenderOpcodeTable(IEnumerable<bool> instructions)
     {
-        bool[] instructionsDone = new bool[256];
-
-        OpcodeHandler handler = new();
-        IBus bus = new DummyBus();
-        CpuState bogusCpuState = new();
-
-        for (int i = 0; i <= 0xFF; i += 1)
+        bool[] instructionsArray = instructions.ToArray();
+        if (instructionsArray.Length != 0x100)
         {
-            bogusCpuState.Ir = (byte)i;
-
-            try
-            {
-                handler.HandleOpcode(ref bogusCpuState, bus);
-                instructionsDone[i] = true;
-            }
-            catch (NotImplementedException e)
-            {
-                instructionsDone[i] = false;
-            }
+            throw new ArgumentException(
+                "Expected exactly 0xFF instructions.", nameof(instructions));
         }
 
-        return instructionsDone;
-    }
-
-    private static void RenderOpcodeTable(bool[] instructions)
-    {
-        Table table = new()
-        {
-        };
+        Table table = new();
 
         table.AddColumn("----");
         for (int lo = 0; lo < 0xFF; lo += 0x10)
@@ -54,7 +33,7 @@ class Program
 
         for (int hi = 0x00; hi < 0xFF; hi += 0x10)
         {
-            IEnumerable<string> rows = instructions[hi..(hi + 0x10)]
+            IEnumerable<string> rows = instructionsArray[hi..(hi + 0x10)]
                 .Select(b => b ? "Done" : " ");
 
             rows = [$"0x{hi:X2}+", ..rows];
@@ -65,15 +44,6 @@ class Program
         table.ShowRowSeparators();
 
         AnsiConsole.Write(table.Expand());
-    }
-
-    private class DummyBus : IBus
-    {
-        public byte this[ushort key]
-        {
-            get => 0;
-            set { }
-        }
     }
 
     // static void Main(FileInfo bios, FileInfo rom)
