@@ -242,14 +242,33 @@ public class OpcodeHandler
 
     private static void Load8Block0(ref CpuState state, IBus bus)
     {
-        if ((state.Ir & 0b_0000_0111) == 0b_110)
+        switch (state.Ir & 0b_1111)
         {
-            byte target = (byte)((state.Ir & 0b_0011_1000) >> 3);
-            byte value = Immediate8(ref state, bus);
-            SetR8(ref state, bus, value, target);
-            return;
+            case 0b_0110:
+            case 0b_1110:
+            {
+                byte target = (byte)((state.Ir & 0b_0011_1000) >> 3);
+                byte value = Immediate8(ref state, bus);
+                SetR8(ref state, bus, value, target);
+                break;
+            }
+            case 0b_0010:
+            {
+                byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
+                SetR16Mem(ref state, bus, target, state.A);
+                break;
+            }
+            case 0b_1010:
+            {
+                byte source = (byte)((state.Ir & 0b_0011_0000) >> 4);
+                byte value = GetR16Mem(ref state, bus, source);
+                SetR8(ref state, bus, value, A);
+                break;
+            }
+            default:
+                Panic(nameof(Load8Block0), state.Ir);
+                break;
         }
-        throw new NotImplementedException();
     }
 
     private static void Load8Block1(ref CpuState state, IBus bus)
@@ -293,34 +312,78 @@ public class OpcodeHandler
         };
     }
 
+    private const byte B = 0;
+    private const byte C = 1;
+    private const byte D = 2;
+    private const byte E = 3;
+    private const byte H = 4;
+    private const byte L = 5;
+    private const byte HLIndirect = 6;
+    private const byte A = 7;
+
     private static void SetR8(ref CpuState state, IBus bus, byte value, byte target)
     {
         switch (target)
         {
-            case 0:
+            case B:
                 state.B = value;
                 break;
-            case 1:
+            case C:
                 state.C = value;
                 break;
-            case 2:
+            case D:
                 state.D = value;
                 break;
-            case 3:
+            case E:
                 state.E = value;
                 break;
-            case 4:
+            case H:
                 state.H = value;
                 break;
-            case 5:
+            case L:
                 state.L = value;
                 break;
-            case 6: // Special case for indirect HL
+            case HLIndirect: // Special case for indirect HL
                 IndirectSet(ref state, bus, state.HL, value);
                 break;
             default: // 7
                 state.A = value;
                 break;
+        }
+    }
+
+    private static byte GetR16Mem(ref CpuState state, IBus bus, byte target)
+    {
+        state.TCycles += MCycleLength;
+        return target switch
+        {
+            0 => bus[state.BC],
+            1 => bus[state.DE],
+            2 => bus[state.HL++],
+            3 => bus[state.HL--],
+            _ => throw new ArgumentException($"{nameof(target)} should be in range [0,3]")
+        };
+    }
+
+    private static void SetR16Mem(ref CpuState state, IBus bus, byte target, byte value)
+    {
+        state.TCycles += MCycleLength;
+        switch (target)
+        {
+            case 0:
+                bus[state.BC] = value;
+                break;
+            case 1:
+                bus[state.DE] = value;
+                break;
+            case 2:
+                bus[state.HL++] = value;
+                break;
+            case 3:
+                bus[state.HL--] = value;
+                break;
+            default:
+                throw new ArgumentException($"{nameof(target)} should be in range [0,3]");
         }
     }
 
@@ -335,4 +398,7 @@ public class OpcodeHandler
         state.TCycles += MCycleLength;
         bus[address] = value;
     }
+
+    private static void Panic(string name, byte opcode) =>
+        throw new ArgumentException($"Unexpected opcode ${opcode:X2} assigned to {name} instruction");
 }

@@ -18,10 +18,45 @@ public record struct CpuState
 
     public long TCycles;
 
-    public ushort AF => Get16BitReg(A, F);
-    public ushort BC => Get16BitReg(B, C);
-    public ushort DE => Get16BitReg(D, E);
-    public ushort HL => Get16BitReg(H, L);
+    public ushort AF
+    {
+        get => Get16BitReg(hi: A, lo: F);
+        set
+        {
+            A = (byte)((value & 0b_1111_0000) >> 4);
+            F = (byte)(value & 0b_0000_1111);
+        }
+    }
+
+    public ushort BC
+    {
+        get => Get16BitReg(hi: B, lo: C);
+        set
+        {
+            B = (byte)((value & 0b_1111_0000) >> 4);
+            C = (byte)(value & 0b_0000_1111);
+        }
+    }
+
+    public ushort DE
+    {
+        get => Get16BitReg(hi: D, lo: E);
+        set
+        {
+            D = (byte)((value & 0b_1111_0000) >> 4);
+            E = (byte)(value & 0b_0000_1111);
+        }
+    }
+
+    public ushort HL
+    {
+        get => Get16BitReg(hi: H, lo: L);
+        set
+        {
+            H = (byte)((value & 0xFF00) >> 8);
+            L = (byte)(value & 0x00FF);
+        }
+    }
 
     public override string ToString()
     {

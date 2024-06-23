@@ -10,7 +10,7 @@ public class CpuTests(ITestOutputHelper testOutputHelper)
     private readonly ITestOutputHelper _testOutputHelper = testOutputHelper;
 
     // Uncomment to test specific opcodes for easier debugging
-    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0x0e ]);
+    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0x22 ]);
 
     // Test all opcodes
     public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData(GetImplementedOpcodes());
@@ -18,16 +18,13 @@ public class CpuTests(ITestOutputHelper testOutputHelper)
 
     private static void ExecuteTest(CpuTestData testData)
     {
-        // set up cpu
+        // Set up CPU
         LoggingBus bus = new(testData.Initial.Ram);
         CpuState initialState = testData.Initial.State with { Ir = testData.Opcode };
         Cpu cpu = new(bus, new OpcodeHandler(), initialState);
 
-        int expectedTCycles = testData.Cycles.Length * 4;
-        while (cpu.State.TCycles < expectedTCycles)
-        {
-            cpu.Step();
-        }
+        // Run just one instruction
+        cpu.Step();
 
         VerifyCpuLogs(testData.GetCpuLog(), bus.Log);
         cpu.State.Should().BeEquivalentTo(testData.Final.State,
