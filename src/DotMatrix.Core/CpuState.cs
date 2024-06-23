@@ -23,8 +23,8 @@ public record struct CpuState
         get => Get16BitReg(hi: A, lo: F);
         set
         {
-            A = (byte)((value & 0b_1111_0000) >> 4);
-            F = (byte)(value & 0b_0000_1111);
+            A = (byte)((value & 0xFF00) >> 8);
+            F = (byte)(value & 0x00FF);
         }
     }
 
@@ -33,8 +33,8 @@ public record struct CpuState
         get => Get16BitReg(hi: B, lo: C);
         set
         {
-            B = (byte)((value & 0b_1111_0000) >> 4);
-            C = (byte)(value & 0b_0000_1111);
+            B = (byte)((value & 0xFF00) >> 8);
+            C = (byte)(value & 0x00FF);
         }
     }
 
@@ -43,8 +43,8 @@ public record struct CpuState
         get => Get16BitReg(hi: D, lo: E);
         set
         {
-            D = (byte)((value & 0b_1111_0000) >> 4);
-            E = (byte)(value & 0b_0000_1111);
+            D = (byte)((value & 0xFF00) >> 8);
+            E = (byte)(value & 0x00FF);
         }
     }
 
