@@ -1,4 +1,5 @@
 using System.Text.Json;
+using DotMatrix.Core.Instructions;
 using Xunit.Abstractions;
 
 namespace DotMatrix.Core.Tests;

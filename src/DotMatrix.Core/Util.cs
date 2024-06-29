@@ -1,3 +1,5 @@
+using DotMatrix.Core.Instructions;
+
 namespace DotMatrix.Core;
 
 public static class Util

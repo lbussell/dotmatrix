@@ -1,4 +1,6 @@
-﻿namespace DotMatrix.Core;
+﻿using DotMatrix.Core.Instructions;
+
+namespace DotMatrix.Core;
 
 public class DotMatrixConsole
 {

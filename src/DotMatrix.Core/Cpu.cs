@@ -1,3 +1,5 @@
+using DotMatrix.Core.Instructions;
+
 namespace DotMatrix.Core;
 
 internal class Cpu(IBus bus, OpcodeHandler opcodeHandler, CpuState initialState = new())

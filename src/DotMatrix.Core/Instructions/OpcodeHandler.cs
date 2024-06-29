@@ -1,8 +1,6 @@
-using System.Reflection.Metadata.Ecma335;
+namespace DotMatrix.Core.Instructions;
 
-namespace DotMatrix.Core;
-
-public class OpcodeHandler
+public partial class OpcodeHandler
 {
     private const int MCycleLength = 4;
 
@@ -223,64 +221,6 @@ public class OpcodeHandler
         throw new NotImplementedException();
     }
 
-    private static void Load8(ref CpuState state, IBus bus)
-    {
-        state.TCycles += MCycleLength;
-        int block = (state.Ir & 0b_1100_0000) >> 6;
-        switch (block)
-        {
-            case 0b_00:
-                Load8Block0(ref state, bus);
-                break;
-            case 0b_01:
-                Load8Block1(ref state, bus);
-                break;
-            default:
-                throw new NotImplementedException();
-        }
-    }
-
-    private static void Load8Block0(ref CpuState state, IBus bus)
-    {
-        switch (state.Ir & 0b_1111)
-        {
-            case 0b_0110:
-            case 0b_1110:
-            {
-                byte target = (byte)((state.Ir & 0b_0011_1000) >> 3);
-                byte value = Immediate8(ref state, bus);
-                SetR8(ref state, bus, value, target);
-                break;
-            }
-            case 0b_0010:
-            {
-                byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
-                SetR16Mem(ref state, bus, target, state.A);
-                break;
-            }
-            case 0b_1010:
-            {
-                byte source = (byte)((state.Ir & 0b_0011_0000) >> 4);
-                byte value = GetR16Mem(ref state, bus, source);
-                SetR8(ref state, bus, value, A);
-                break;
-            }
-            default:
-                Panic(nameof(Load8Block0), state.Ir);
-                break;
-        }
-    }
-
-    private static void Load8Block1(ref CpuState state, IBus bus)
-    {
-        byte source = (byte)(state.Ir & 0b_0000_0111);
-        byte target = (byte)((state.Ir & 0b_0011_1000) >> 3);
-
-        SetR8(ref state, bus,
-            value: GetR8(ref state, bus, source),
-            target: target);
-    }
-
     private static void Load16(ref CpuState state, IBus bus)
     {
         throw new NotImplementedException();
@@ -289,67 +229,6 @@ public class OpcodeHandler
     private static void NoOp(ref CpuState state, IBus bus)
     {
         state.TCycles += 4;
-    }
-
-    private static byte Immediate8(ref CpuState state, IBus bus)
-    {
-        state.TCycles += MCycleLength;
-        return bus[state.Pc++];
-    }
-
-    private static byte GetR8(ref CpuState state, IBus bus, byte target)
-    {
-        return target switch
-        {
-            0 => state.B,
-            1 => state.C,
-            2 => state.D,
-            3 => state.E,
-            4 => state.H,
-            5 => state.L,
-            6 => IndirectGet(ref state, bus, state.HL),
-            _ => state.A,
-        };
-    }
-
-    private const byte B = 0;
-    private const byte C = 1;
-    private const byte D = 2;
-    private const byte E = 3;
-    private const byte H = 4;
-    private const byte L = 5;
-    private const byte HLIndirect = 6;
-    private const byte A = 7;
-
-    private static void SetR8(ref CpuState state, IBus bus, byte value, byte target)
-    {
-        switch (target)
-        {
-            case B:
-                state.B = value;
-                break;
-            case C:
-                state.C = value;
-                break;
-            case D:
-                state.D = value;
-                break;
-            case E:
-                state.E = value;
-                break;
-            case H:
-                state.H = value;
-                break;
-            case L:
-                state.L = value;
-                break;
-            case HLIndirect: // Special case for indirect HL
-                IndirectSet(ref state, bus, state.HL, value);
-                break;
-            default: // 7
-                state.A = value;
-                break;
-        }
     }
 
     private static byte GetR16Mem(ref CpuState state, IBus bus, byte target)
@@ -385,6 +264,20 @@ public class OpcodeHandler
             default:
                 throw new ArgumentException($"{nameof(target)} should be in range [0,3]");
         }
+    }
+
+    private static byte Immediate8(ref CpuState state, IBus bus)
+    {
+        state.TCycles += MCycleLength;
+        return bus[state.Pc++];
+    }
+
+    private static ushort Immediate16(ref CpuState state, IBus bus)
+    {
+        state.TCycles += MCycleLength + MCycleLength;
+        byte lsb = bus[state.Pc++];
+        byte msb = bus[state.Pc++];
+        return (ushort)((msb << 8) | lsb);
     }
 
     private static byte IndirectGet(ref CpuState state, IBus bus, ushort address)
