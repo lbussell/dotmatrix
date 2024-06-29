@@ -2,14 +2,17 @@ using DotMatrix.Core.Instructions;
 
 namespace DotMatrix.Core;
 
-internal class Cpu(IBus bus, OpcodeHandler opcodeHandler, CpuState initialState = new())
+internal class Cpu(IBus bus, IOpcodeHandler opcodeHandler, CpuState initialState = new())
 {
     private readonly IBus _bus = bus;
-    private readonly OpcodeHandler _opcodeHandler = opcodeHandler;
+    private readonly IOpcodeHandler _opcodeHandler = opcodeHandler;
     private CpuState _state = initialState;
 
     // Needs to be internal so that state can be checked in tests
-    internal CpuState State => _state;
+    internal CpuState State
+    {
+        get { return _state; }
+    }
 
     /**
      * One full decode-execute-fetch cycle. Not always 4 T-Cycles.
@@ -26,5 +29,9 @@ internal class Cpu(IBus bus, OpcodeHandler opcodeHandler, CpuState initialState 
         _state.Ir = Fetch();
     }
 
-    private byte Fetch() => _bus[_state.Pc++];
+    private byte Fetch()
+    {
+        _state.IncrementMCycles();
+        return _bus[_state.Pc++];
+    }
 }

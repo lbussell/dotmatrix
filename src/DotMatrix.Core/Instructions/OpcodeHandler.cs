@@ -1,230 +1,280 @@
 namespace DotMatrix.Core.Instructions;
 
-public partial class OpcodeHandler
+public class OpcodeHandler : IOpcodeHandler
 {
-    private delegate void Instruction(ref CpuState state, IBus bus);
-
-    private static readonly Instruction[] s_instructions =
-    [
-        NoOp,       Load16,     Load8,      Inc16,      Inc8,       Dec8,       Load8,      Rlca,
-        Load16,     Add16,      Load8,      Dec16,      Inc8,       Dec8,       Load8,      Rrca,
-        Stop,       Load16,     Load8,      Inc16,      Inc8,       Dec8,       Load8,      Rla,
-        Jr,         Add16,      Load8,      Dec16,      Inc8,       Dec8,       Load8,      Rra,
-        Jr,         Load16,     Load8,      Inc16,      Inc8,       Dec8,       Load8,      Daa,
-        Jr,         Add16,      Load8,      Dec16,      Inc8,       Dec8,       Load8,      Cpl,
-        Jr,         Load16,     Load8,      Inc16,      Inc8,       Dec8,       Load8,      Scf,
-        Jr,         Add16,      Load8,      Dec16,      Inc8,       Dec8,       Load8,      Ccf,
-
-        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
-        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
-        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
-        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
-        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
-        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
-        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Halt,       Load8,
-        Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,      Load8,
-
-        Add,        Add,        Add,        Add,        Add,        Add,        Add,        Add,
-        Adc,        Adc,        Adc,        Adc,        Adc,        Adc,        Adc,        Adc,
-        Sub,        Sub,        Sub,        Sub,        Sub,        Sub,        Sub,        Sub,
-        Sbc,        Sbc,        Sbc,        Sbc,        Sbc,        Sbc,        Sbc,        Sbc,
-        And,        And,        And,        And,        And,        And,        And,        And,
-        Xor,        Xor,        Xor,        Xor,        Xor,        Xor,        Xor,        Xor,
-        Or,         Or,         Or,         Or,         Or,         Or,         Or,         Or,
-        Cp,         Cp,         Cp,         Cp,         Cp,         Cp,         Cp,         Cp,
-
-        Ret,        Pop,        Jp,         Jp,         Call,       Push,       Add,        Rst,
-        Ret,        Ret,        Jp,         Cb,         Call,       Call,       Adc,        Rst,
-        Ret,        Pop,        Jp,         Undef,      Call,       Push,       Sub,        Rst,
-        Ret,        Reti,       Jp,         Undef,      Call,       Undef,      Sbc,        Rst,
-        Load8,      Pop,        Load8,      Undef,      Undef,      Push,       And,        Rst,
-        Add16,      Jp,         Load8,      Undef,      Undef,      Undef,      Xor,        Rst,
-        Load8,      Pop,        Load8,      Di,         Undef,      Push,       Or,         Rst,
-        Add16,      Reti,       Load8,      Di,         Undef,      Undef,      Cp,         Rst,
-    ];
-
-    private static void Load8(ref CpuState state, IBus bus) => Instructions.Load8.Load8Impl(ref state, bus);
-
-    private static void Load16(ref CpuState state, IBus bus) => Instructions.Load16.Load16Impl(ref state, bus);
-
     public void HandleOpcode(ref CpuState state, IBus bus)
     {
-        s_instructions[state.Ir](ref state, bus);
+        switch (state.Ir)
+        {
+            case 0x00:
+                return; // NoOp
+
+            case 0x01 or 0x11 or 0x21 or 0x31:
+                Load16(ref state, bus);
+                break;
+            case 0x08:
+                Load16ToMemory(ref state, bus);
+                break;
+
+            case 0x02 or 0x06 or 0x0A or 0x0E:
+            case 0x12 or 0x16 or 0x1A or 0x1E:
+            case 0x22 or 0x26 or 0x2A or 0x2E:
+            case 0x32 or 0x36 or 0x3A or 0x3E:
+                Load8Block0(ref state, bus);
+                break;
+
+            case 0x07:
+                throw new NotImplementedException("Rlca");
+            case 0x0F:
+                throw new NotImplementedException("Rrca");
+            case 0x10:
+                throw new NotImplementedException("Stop");
+            case 0x17:
+                throw new NotImplementedException("Rla");
+            case 0x18:
+                throw new NotImplementedException("Jr i8");
+            case 0x1F:
+                throw new NotImplementedException("Rra");
+
+            case 0x20 or 0x28 or 0x30 or 0x38:
+                throw new NotImplementedException("Jr");
+
+            case 0x27:
+                throw new NotImplementedException("Daa");
+            case 0x2F:
+                throw new NotImplementedException("Cpl");
+            case 0x37:
+                throw new NotImplementedException("Scf");
+            case 0x3F:
+                throw new NotImplementedException("Ccf");
+
+            case 0x76:
+                throw new NotImplementedException("Halt");
+            case >= 0x40 and <= 0x7F:
+                Load8Block1(ref state, bus);
+                break;
+
+            case >= 0x80 and <= 0xBF:
+                throw new NotImplementedException("Alu8");
+
+            case 0xE0 or 0xE2 or 0xEA:
+            case 0xF0 or 0xF2 or 0xFA:
+                Load8Block3(ref state, bus);
+                break;
+
+            default:
+                throw new NotImplementedException($"Unexpected opcode {state.Ir}");
+        }
     }
 
-    private static void Cb(ref CpuState state, IBus bus)
+    private static void Load16(ref CpuState state, IBus bus)
     {
-        state.IrIsCb = true;
-        throw new NotImplementedException();
+        byte target = (byte)((state.Ir & 0b_00110000) >> 4);
+        SetR16(ref state, bus, target, Immediate16(ref state, bus));
     }
 
-    private static void Di(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Reti(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Push(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Call(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Jp(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Pop(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Ret(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Cp(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Or(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Xor(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Ccf(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Scf(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Cpl(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Daa(ref CpuState state, IBus bus)
+    private static void Load16ToMemory(ref CpuState state, IBus bus)
     {
         throw new NotImplementedException();
     }
 
-    private static void Halt(ref CpuState state, IBus bus)
+    private static void Load8Block0(ref CpuState state, IBus bus)
     {
-        throw new NotImplementedException();
+        switch (state.Ir & 0b_1111)
+        {
+            // X110 = 0110 or 1110
+            case 0b_0110:
+            case 0b_1110:
+            {
+                // LD R8 <- i8
+                byte target = (byte)((state.Ir & 0b_0011_1000) >> 3);
+                byte value = Immediate8(ref state, bus);
+                SetR8(ref state, bus, value, target);
+                break;
+            }
+            case 0b_0010:
+            {
+                // LD [R16] <- A
+                byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
+                SetR16Mem(ref state, bus, target, state.A);
+                break;
+            }
+            default:
+            case 0b_1010:
+            {
+                // LD A <- [R16]
+                byte source = (byte)((state.Ir & 0b_0011_0000) >> 4);
+                byte value = GetR16Mem(ref state, bus, source);
+                SetR8(ref state, bus, value, Target.A);
+                break;
+            }
+        }
     }
 
-    private static void Sbc(ref CpuState state, IBus bus)
+    // LD R <- R`
+    private static void Load8Block1(ref CpuState state, IBus bus)
     {
-        throw new NotImplementedException();
+        byte source = (byte)(state.Ir & 0b_0000_0111);
+        byte target = (byte)((state.Ir & 0b_0011_1000) >> 3);
+
+        SetR8(ref state, bus,
+            value: GetR8(ref state, bus, source),
+            target: target);
     }
 
-    private static void And(ref CpuState state, IBus bus)
+    private static void Load8Block3(ref CpuState state, IBus bus)
     {
-        throw new NotImplementedException();
+        state.IncrementMCycles();
+        switch (state.Ir & 0b_0001_1111)
+        {
+            case (0b_00010): // LDH [0xFF00+C] <- A
+                bus[(ushort)(0xFF00 + state.C)] = state.A;
+                break;
+            case (0b_00000): // LDH [0xFF00+imm8] <- A
+                bus[(ushort)(0xFF00 + Immediate8(ref state, bus))] = state.A;
+                break;
+            case (0b_01010): // LDH [imm16] <- A
+                bus[Immediate16(ref state, bus)] = state.A;
+                break;
+            case (0b_10010): // LDH A <- [0xFF00+C]
+                state.A = bus[(ushort)(0xFF00 + state.C)];
+                break;
+            case (0b_10000): // LDH A <- [0xFF00+imm8]
+                state.A = bus[(ushort)(0xFF00 + Immediate8(ref state, bus))];
+                break;
+            case (0b_11010): // LDH A <- [imm16]
+            default:
+                state.A = bus[Immediate16(ref state, bus)];
+                break;
+        }
     }
 
-    private static void Rra(ref CpuState state, IBus bus)
+    private static byte GetR8(ref CpuState state, IBus bus, byte target)
     {
-        throw new NotImplementedException();
+        return target switch
+        {
+            0 => state.B,
+            1 => state.C,
+            2 => state.D,
+            3 => state.E,
+            4 => state.H,
+            5 => state.L,
+            6 => IndirectGet(ref state, bus, state.HL),
+            _ => state.A,
+        };
     }
 
-    private static void Rla(ref CpuState state, IBus bus)
+    private static void SetR8(ref CpuState state, IBus bus, byte value, byte target)
     {
-        throw new NotImplementedException();
+        switch (target)
+        {
+            case Target.B:
+                state.B = value;
+                break;
+            case Target.C:
+                state.C = value;
+                break;
+            case Target.D:
+                state.D = value;
+                break;
+            case Target.E:
+                state.E = value;
+                break;
+            case Target.H:
+                state.H = value;
+                break;
+            case Target.L:
+                state.L = value;
+                break;
+            case Target.HLIndirect: // Special case for indirect HL
+                IndirectSet(ref state, bus, state.HL, value);
+                break;
+            default: // 7
+                state.A = value;
+                break;
+        }
     }
 
-    private static void Adc(ref CpuState state, IBus bus)
+    private static byte GetR16Mem(ref CpuState state, IBus bus, byte target)
     {
-        throw new NotImplementedException();
+        state.IncrementMCycles();
+        return target switch
+        {
+            0 => bus[state.BC],
+            1 => bus[state.DE],
+            2 => bus[state.HL++],
+            3 => bus[state.HL--],
+            _ => throw new ArgumentException($"{nameof(target)} should be in range [0,3]")
+        };
     }
 
-    private static void Sub(ref CpuState state, IBus bus)
+    private static void SetR16(ref CpuState state, IBus bus, byte target, ushort value)
     {
-        throw new NotImplementedException();
+        switch (target)
+        {
+            case 0:
+                state.BC = value;
+                break;
+            case 1:
+                state.DE = value;
+                break;
+            case 2:
+                state.HL = value;
+                break;
+            default:
+            case 3:
+                state.Sp = value;
+                break;
+        }
     }
 
-    private static void Rlca(ref CpuState state, IBus bus)
+    private static void SetR16Mem(ref CpuState state, IBus bus, byte target, byte value)
     {
-        throw new NotImplementedException();
+        state.IncrementMCycles();
+        switch (target)
+        {
+            case 0:
+                bus[state.BC] = value;
+                break;
+            case 1:
+                bus[state.DE] = value;
+                break;
+            case 2:
+                bus[state.HL++] = value;
+                break;
+            default:
+            case 3:
+                bus[state.HL--] = value;
+                break;
+        }
     }
 
-    private static void Undef(ref CpuState state, IBus bus)
+    private static byte Immediate8(ref CpuState state, IBus bus)
     {
-        throw new NotImplementedException();
+        state.IncrementMCycles();
+        return bus[state.Pc++];
     }
 
-    private static void Rst(ref CpuState state, IBus bus)
+    private static ushort Immediate16(ref CpuState state, IBus bus)
     {
-        throw new NotImplementedException();
+        state.IncrementMCycles(2);
+        byte lsb = bus[state.Pc++];
+        byte msb = bus[state.Pc++];
+        return (ushort)((msb << 8) | lsb);
     }
 
-    private static void Rrca(ref CpuState state, IBus bus)
+    private static byte IndirectGet(ref CpuState state, IBus bus, ushort address)
     {
-        throw new NotImplementedException();
+        state.IncrementMCycles();
+        return bus[address];
     }
 
-    private static void Dec8(ref CpuState state, IBus bus)
+    private static void IndirectSet(ref CpuState state, IBus bus, ushort address, byte value)
     {
-        throw new NotImplementedException();
+        state.IncrementMCycles();
+        bus[address] = value;
     }
 
-    private static void Dec16(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Add16(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Stop(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Jr(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Add(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Inc8(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void Inc16(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static void NoOp(ref CpuState state, IBus bus)
-    {
-        state.TCycles += 4;
-    }
+    private static void Panic(byte opcode) =>
+        throw new ArgumentException($"Unexpected opcode ${opcode:X2}");
 }

@@ -11,31 +11,37 @@ class Program
         // DotMatrixConsole c = DotMatrixConsole.CreateInstance(biosData, romData);
         // c.Run();
 
-        RenderOpcodeTable(Util.GetImplementedOpcodesArray());
+        RenderOpcodeTable();
     }
 
-    private static void RenderOpcodeTable(IEnumerable<bool> instructions)
+    private static void RenderOpcodeTable()
     {
-        bool[] instructionsArray = instructions.ToArray();
+        bool[] instructionsArray = Util.GetImplementedOpcodesArray().ToArray();
+        bool[] anticipatedArray = Util.GetAnticipatedOpcodesArray().ToArray();
+        string[] zippedArray = instructionsArray
+            .Zip(anticipatedArray)
+            .Select(t => t.First ? "Impl" : t.Second ? "..." : " ")
+            .ToArray();
+
         if (instructionsArray.Length != 0x100)
         {
-            throw new ArgumentException(
-                "Expected exactly 0xFF instructions.", nameof(instructions));
+            throw new ArgumentException("Expected exactly 0x100 instructions.");
         }
 
         Table table = new();
 
         table.AddColumn("----");
-        for (int lo = 0; lo < 0xFF; lo += 0x10)
+        for (int lo = 0; lo < 0x10; lo += 0x01)
         {
-            table.AddColumn($"0x{lo:X2}");
+            table.AddColumn($"+{lo:X1}");
         }
 
         for (int hi = 0x00; hi < 0xFF; hi += 0x10)
         {
-            IEnumerable<string> rows = instructionsArray[hi..(hi + 0x10)]
-                .Select(b => b ? "Done" : " ");
+            // IEnumerable<string> rows = instructionsArray[hi..(hi + 0x10)]
+            //     .Select(b => b ? "Done" : " ");
 
+            IEnumerable<string> rows = zippedArray[hi..(hi + 0x10)];
             rows = [$"0x{hi:X2}+", ..rows];
 
             table.AddRow(rows.ToArray());

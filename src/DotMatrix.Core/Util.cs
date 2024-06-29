@@ -38,6 +38,34 @@ public static class Util
         }
     }
 
+    public static IEnumerable<bool> GetAnticipatedOpcodesArray()
+    {
+        OpcodeHandler handler = new();
+        IBus bus = new DummyBus();
+        CpuState bogusCpuState = new();
+
+        for (int i = 0; i <= NumberOfOpcodes; i += 1)
+        {
+            bogusCpuState.Ir = (byte)i;
+
+            bool result = false;
+            try
+            {
+                handler.HandleOpcode(ref bogusCpuState, bus);
+                result = true;
+            }
+            catch (NotImplementedException e)
+            {
+                if (!e.Message.Contains("Unexpected"))
+                {
+                    result = true;
+                }
+            }
+
+            yield return result;
+        }
+    }
+
     private class DummyBus : IBus
     {
         public byte this[ushort address]
