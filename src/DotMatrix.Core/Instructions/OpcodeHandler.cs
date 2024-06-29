@@ -2,8 +2,6 @@ namespace DotMatrix.Core.Instructions;
 
 public partial class OpcodeHandler
 {
-    private const int MCycleLength = 4;
-
     private delegate void Instruction(ref CpuState state, IBus bus);
 
     private static readonly Instruction[] s_instructions =
@@ -44,6 +42,10 @@ public partial class OpcodeHandler
         Load8,      Pop,        Load8,      Di,         Undef,      Push,       Or,         Rst,
         Add16,      Reti,       Load8,      Di,         Undef,      Undef,      Cp,         Rst,
     ];
+
+    private static void Load8(ref CpuState state, IBus bus) => Instructions.Load8.Load8Impl(ref state, bus);
+
+    private static void Load16(ref CpuState state, IBus bus) => Instructions.Load16.Load16Impl(ref state, bus);
 
     public void HandleOpcode(ref CpuState state, IBus bus)
     {
@@ -221,77 +223,8 @@ public partial class OpcodeHandler
         throw new NotImplementedException();
     }
 
-    private static void Load16(ref CpuState state, IBus bus)
-    {
-        throw new NotImplementedException();
-    }
-
     private static void NoOp(ref CpuState state, IBus bus)
     {
         state.TCycles += 4;
     }
-
-    private static byte GetR16Mem(ref CpuState state, IBus bus, byte target)
-    {
-        state.TCycles += MCycleLength;
-        return target switch
-        {
-            0 => bus[state.BC],
-            1 => bus[state.DE],
-            2 => bus[state.HL++],
-            3 => bus[state.HL--],
-            _ => throw new ArgumentException($"{nameof(target)} should be in range [0,3]")
-        };
-    }
-
-    private static void SetR16Mem(ref CpuState state, IBus bus, byte target, byte value)
-    {
-        state.TCycles += MCycleLength;
-        switch (target)
-        {
-            case 0:
-                bus[state.BC] = value;
-                break;
-            case 1:
-                bus[state.DE] = value;
-                break;
-            case 2:
-                bus[state.HL++] = value;
-                break;
-            case 3:
-                bus[state.HL--] = value;
-                break;
-            default:
-                throw new ArgumentException($"{nameof(target)} should be in range [0,3]");
-        }
-    }
-
-    private static byte Immediate8(ref CpuState state, IBus bus)
-    {
-        state.TCycles += MCycleLength;
-        return bus[state.Pc++];
-    }
-
-    private static ushort Immediate16(ref CpuState state, IBus bus)
-    {
-        state.TCycles += MCycleLength + MCycleLength;
-        byte lsb = bus[state.Pc++];
-        byte msb = bus[state.Pc++];
-        return (ushort)((msb << 8) | lsb);
-    }
-
-    private static byte IndirectGet(ref CpuState state, IBus bus, ushort address)
-    {
-        state.TCycles += MCycleLength;
-        return bus[address];
-    }
-
-    private static void IndirectSet(ref CpuState state, IBus bus, ushort address, byte value)
-    {
-        state.TCycles += MCycleLength;
-        bus[address] = value;
-    }
-
-    private static void Panic(string name, byte opcode) =>
-        throw new ArgumentException($"Unexpected opcode ${opcode:X2} assigned to {name} instruction");
 }

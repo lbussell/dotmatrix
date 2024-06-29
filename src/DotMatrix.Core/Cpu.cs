@@ -11,13 +11,8 @@ internal class Cpu(IBus bus, OpcodeHandler opcodeHandler, CpuState initialState 
     // Needs to be internal so that state can be checked in tests
     internal CpuState State => _state;
 
-    public void Run(int cycles)
-    {
-        RunInternal(cycles);
-    }
-
-    /*
-     * One full decode-execute-fetch cycle. Not always 4 T-Cycles
+    /**
+     * One full decode-execute-fetch cycle. Not always 4 T-Cycles.
      */
     internal void Step()
     {
@@ -29,13 +24,6 @@ internal class Cpu(IBus bus, OpcodeHandler opcodeHandler, CpuState initialState 
         // The fetch happens simultaneously with the last M-Cycle of an instruction
         // So don't add to cycles here since it was already accounted for in the instruction
         _state.Ir = Fetch();
-    }
-
-    private void RunInternal(int tCycles)
-    {
-        while (_state.TCycles < tCycles)
-        {
-        }
     }
 
     private byte Fetch() => _bus[_state.Pc++];

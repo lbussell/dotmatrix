@@ -1,7 +1,11 @@
+using DotMatrix.Core.Instructions;
+
 namespace DotMatrix.Core;
 
 public record struct CpuState
 {
+    private const int MCycleLength = 4;
+
     public byte A;
     public byte F;
     public byte B;
@@ -79,6 +83,11 @@ public record struct CpuState
             H = (byte)((value & 0xFF00) >> 8);
             L = (byte)(value & 0x00FF);
         }
+    }
+
+    public void IncrementMCycles(int numberOfMCycles = 1)
+    {
+        TCycles += MCycleLength * numberOfMCycles;
     }
 
     public override string ToString()

@@ -22,9 +22,4 @@ public class DotMatrixConsole
 
         return new DotMatrixConsole(cpu, bus);
     }
-
-    public void Run()
-    {
-        _cpu.Run(0xFF);
-    }
 }
