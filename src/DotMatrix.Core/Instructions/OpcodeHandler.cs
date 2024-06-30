@@ -66,9 +66,18 @@ public class OpcodeHandler : IOpcodeHandler
             case >= 0x98 and <= 0x9F:
                 Sbc(ref state, bus);
                 break;
-
-            case >= 0x80 and <= 0xBF:
-                throw new NotImplementedException("Alu8");
+            case >= 0xA0 and <= 0xA7:
+                And(ref state, bus);
+                break;
+            case >= 0xA8 and <= 0xAF:
+                Xor(ref state, bus);
+                break;
+            case >= 0xB0 and <= 0xB7:
+                Or(ref state, bus);
+                break;
+            case >= 0xB8 and <= 0xBF:
+                Cp(ref state, bus);
+                break;
 
             case 0xC1 or 0xD1 or 0xE1 or 0xF1:
                 Pop(ref state, bus);
@@ -118,29 +127,62 @@ public class OpcodeHandler : IOpcodeHandler
         state.SetZeroFlag(state.A);
     }
 
+    /**
+     * Subtract from A
+     */
     private static void Sub(ref CpuState state, IBus bus)
     {
         uint operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
-        SubFromAInternal(ref state, operand);
+        state.A = SubFromAInternal(ref state, operand);
     }
 
+    /**
+     * Subtract from A with carry
+     */
     private static void Sbc(ref CpuState state, IBus bus)
     {
         uint operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
-        SubFromAInternal(ref state, operand, state.CarryFlag);
+        state.A = SubFromAInternal(ref state, operand, state.CarryFlag);
     }
 
-    private static void SubFromAInternal(ref CpuState state, uint value, byte carry = 0)
+    private static void Cp(ref CpuState state, IBus bus)
+    {
+        uint operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
+        _ = SubFromAInternal(ref state, operand);
+    }
+
+    private static byte SubFromAInternal(ref CpuState state, uint value, byte carry = 0)
     {
         uint result = state.A - value - carry;
 
         state.ClearFlags();
+        state.SetZeroFlag((byte)result);
         state.SetN();
         state.SetHalfCarryFlag((state.A & 0xF) < (value & 0xF) + carry);
         state.SetCarryFlag(result > 0xFF);
 
-        // Set zero flag after down-casting
-        state.A = (byte)result;
+        return (byte)result;
+    }
+
+    private static void And(ref CpuState state, IBus bus)
+    {
+        state.A = (byte)(state.A & GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
+        state.ClearFlags();
+        state.SetHalfCarryFlag(true);
+        state.SetZeroFlag(state.A);
+    }
+
+    private static void Xor(ref CpuState state, IBus bus)
+    {
+        state.A = (byte)(state.A ^ GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
+        state.ClearFlags();
+        state.SetZeroFlag(state.A);
+    }
+
+    private static void Or(ref CpuState state, IBus bus)
+    {
+        state.A = (byte)(state.A | GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
+        state.ClearFlags();
         state.SetZeroFlag(state.A);
     }
 
