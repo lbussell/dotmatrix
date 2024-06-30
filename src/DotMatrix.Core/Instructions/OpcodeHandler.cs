@@ -57,15 +57,88 @@ public class OpcodeHandler : IOpcodeHandler
             case >= 0x80 and <= 0xBF:
                 throw new NotImplementedException("Alu8");
 
+            case 0xC1 or 0xD1 or 0xE1 or 0xF1:
+                Pop(ref state, bus);
+                break;
+            case 0xC5 or 0xD5 or 0xE5 or 0xF5:
+                Push(ref state, bus);
+                break;
+
             case 0xE0 or 0xE2 or 0xEA:
             case 0xF0 or 0xF2 or 0xFA:
                 Load8Block3(ref state, bus);
+                break;
+
+            case 0xF9:
+                Load16SpHl(ref state);
                 break;
 
             default:
                 throw new NotImplementedException($"Unexpected opcode {state.Ir}");
         }
     }
+
+    private static void Push(ref CpuState state, IBus bus)
+    {
+        byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
+        ushort value = GetR16Stk(ref state, bus, target);
+        bus[--state.Sp] = Hi(value);
+        bus[--state.Sp] = Lo(value);
+        state.IncrementMCycles(2);
+    }
+
+    private static void Pop(ref CpuState state, IBus bus)
+    {
+        // ld LOW(r16), [sp] ; C, E or L
+        // inc sp
+        // ld HIGH(r16), [sp] ; B, D or H
+        // inc sp
+        byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
+        byte lsb = bus[state.Sp++];
+        byte msb = bus[state.Sp++];
+        ushort value = (ushort)((msb << 8) | lsb);
+        state.IncrementMCycles();
+        SetR16Stk(ref state, target, value);
+    }
+
+    private static ushort GetR16Stk(ref CpuState state, IBus bus, byte target)
+    {
+        state.IncrementMCycles();
+        switch (target)
+        {
+            case 0:
+                return state.BC;
+            case 1:
+                return state.DE;
+            case 2:
+                return state.HL;
+            default:
+            case 3:
+                return state.AF;
+        }
+    }
+
+    private static void SetR16Stk(ref CpuState state, byte target, ushort value)
+    {
+        state.IncrementMCycles();
+        switch (target)
+        {
+            case 0:
+                state.BC = value;
+                break;
+            case 1:
+                state.DE = value;
+                break;
+            case 2:
+                state.HL = value;
+                break;
+            default:
+            case 3:
+                state.AF = value;
+                break;
+        }
+    }
+
 
     private static void Load16(ref CpuState state, IBus bus)
     {
@@ -75,7 +148,16 @@ public class OpcodeHandler : IOpcodeHandler
 
     private static void Load16ToMemory(ref CpuState state, IBus bus)
     {
-        throw new NotImplementedException();
+        ushort nn = Immediate16(ref state, bus);
+        bus[nn++] = Lo(state.Sp);
+        bus[nn] = Hi(state.Sp);
+        state.IncrementMCycles(2);
+    }
+
+    private static void Load16SpHl(ref CpuState state)
+    {
+        state.Sp = state.HL;
+        state.IncrementMCycles();
     }
 
     private static void Load8Block0(ref CpuState state, IBus bus)
@@ -274,6 +356,10 @@ public class OpcodeHandler : IOpcodeHandler
         state.IncrementMCycles();
         bus[address] = value;
     }
+
+    private static byte Hi(ushort nn) => (byte)((nn & 0xFF00) >> 8);
+
+    private static byte Lo(ushort nn) => (byte)(nn & 0x00FF);
 
     private static void Panic(byte opcode) =>
         throw new ArgumentException($"Unexpected opcode ${opcode:X2}");

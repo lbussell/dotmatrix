@@ -42,7 +42,8 @@ public record struct CpuState
         set
         {
             A = (byte)((value & 0xFF00) >> 8);
-            F = (byte)(value & 0x00FF);
+            // Not a typo, bottom 4 bits of F are always 0
+            F = (byte)(value & 0x00F0);
         }
     }
 

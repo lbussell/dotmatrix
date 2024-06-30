@@ -1,17 +1,12 @@
-using System.Text.Json;
+using System.Collections.Generic;
 using DotMatrix.Core.Instructions;
-using Xunit.Abstractions;
 
 namespace DotMatrix.Core.Tests;
 
-using System.Collections.Generic;
-
-public class CpuTests(ITestOutputHelper testOutputHelper)
+public class CpuTests
 {
-    private readonly ITestOutputHelper _testOutputHelper = testOutputHelper;
-
     // Uncomment to test specific opcodes for easier debugging
-    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0x22 ]);
+    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0x08 ]);
 
     // Test all opcodes
     public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData(GetImplementedOpcodes());
