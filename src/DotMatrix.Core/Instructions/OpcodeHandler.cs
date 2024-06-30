@@ -54,6 +54,13 @@ public class OpcodeHandler : IOpcodeHandler
                 Load8Block1(ref state, bus);
                 break;
 
+            case >= 0x80 and <= 0x87:
+                Add(ref state, bus);
+                break;
+            case >= 0x88 and <= 0x8F:
+                Adc(ref state, bus);
+                break;
+
             case >= 0x80 and <= 0xBF:
                 throw new NotImplementedException("Alu8");
 
@@ -78,6 +85,37 @@ public class OpcodeHandler : IOpcodeHandler
         }
     }
 
+    #region 8-Bit ALU
+
+    private static void Add(ref CpuState state, IBus bus)
+    {
+        byte operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
+        AddToAInternal(ref state, operand);
+    }
+
+    private static void Adc(ref CpuState state, IBus bus)
+    {
+        int operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
+        AddToAInternal(ref state, operand, state.CarryFlag);
+    }
+
+    private static void AddToAInternal(ref CpuState state, int value, byte carry = 0)
+    {
+        int result = state.A + value + carry;
+
+        state.ClearFlags();
+        state.SetHalfCarryFlag((state.A & 0xF) + (value & 0xF) + carry);
+        state.SetCarryFlag_8Bit(result);
+
+        // Set zero flag after down-casting
+        state.A = (byte)result;
+        state.SetZeroFlag(state.A);
+    }
+
+    #endregion
+
+    #region 16-Bit LSM
+
     private static void Push(ref CpuState state, IBus bus)
     {
         byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
@@ -89,10 +127,6 @@ public class OpcodeHandler : IOpcodeHandler
 
     private static void Pop(ref CpuState state, IBus bus)
     {
-        // ld LOW(r16), [sp] ; C, E or L
-        // inc sp
-        // ld HIGH(r16), [sp] ; B, D or H
-        // inc sp
         byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
         byte lsb = bus[state.Sp++];
         byte msb = bus[state.Sp++];
@@ -193,6 +227,10 @@ public class OpcodeHandler : IOpcodeHandler
         }
     }
 
+    #endregion
+
+    #region 8-Bit LSM
+
     // LD R <- R`
     private static void Load8Block1(ref CpuState state, IBus bus)
     {
@@ -276,6 +314,8 @@ public class OpcodeHandler : IOpcodeHandler
                 break;
         }
     }
+
+    #endregion
 
     private static byte GetR16Mem(ref CpuState state, IBus bus, byte target)
     {

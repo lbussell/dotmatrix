@@ -86,6 +86,8 @@ public record struct CpuState
         }
     }
 
+    public byte CarryFlag => (byte)((F & 0b_0001_0000) >> 4);
+
     public void IncrementMCycles(int numberOfMCycles = 1)
     {
         TCycles += MCycleLength * numberOfMCycles;
