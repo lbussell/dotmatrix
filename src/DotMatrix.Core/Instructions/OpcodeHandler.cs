@@ -23,6 +23,19 @@ public class OpcodeHandler : IOpcodeHandler
                 Load8Block0(ref state, bus);
                 break;
 
+            case 0x04 or 0x0C:
+            case 0x14 or 0x1C:
+            case 0x24 or 0x2C:
+            case 0x34 or 0x3C:
+                Inc(ref state, bus);
+                break;
+            case 0x05 or 0x0D:
+            case 0x15 or 0x1D:
+            case 0x25 or 0x2D:
+            case 0x35 or 0x3D:
+                Dec(ref state, bus);
+                break;
+
             case 0x07:
                 throw new NotImplementedException("Rlca");
             case 0x0F:
@@ -135,6 +148,32 @@ public class OpcodeHandler : IOpcodeHandler
     }
 
     #region 8-Bit ALU
+
+    private static void Inc(ref CpuState state, IBus bus)
+    {
+        byte target = (byte)((state.Ir & 0b_0011_1000) >> 3);
+        byte value = GetR8(ref state, bus, target);
+        byte result = (byte)(value + 1);
+
+        state.SetZeroFlag(result);
+        state.ClearN();
+        state.SetHalfCarryFlag((value & 0xF) + 1 > 0xF);
+
+        SetR8(ref state, bus, result, target);
+    }
+
+    private static void Dec(ref CpuState state, IBus bus)
+    {
+        byte target = (byte)((state.Ir & 0b_0011_1000) >> 3);
+        byte value = GetR8(ref state, bus, target);
+        byte result = (byte)(value - 1);
+
+        state.SetZeroFlag(result);
+        state.SetN();
+        state.SetHalfCarryFlag((value & 0xF) == 0x0);
+
+        SetR8(ref state, bus, result, target);
+    }
 
     private static void Add(ref CpuState state, IBus bus) =>
         AddToAInternal(ref state, GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));

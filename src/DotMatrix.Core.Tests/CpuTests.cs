@@ -6,7 +6,7 @@ namespace DotMatrix.Core.Tests;
 public class CpuTests
 {
     // Uncomment to test specific opcodes for easier debugging
-    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0x80 ]);
+    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0x0C ]);
 
     // Test all opcodes
     public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData(GetImplementedOpcodes());
