@@ -60,6 +60,12 @@ public class OpcodeHandler : IOpcodeHandler
             case >= 0x88 and <= 0x8F:
                 Adc(ref state, bus);
                 break;
+            case >= 0x90 and <= 0x97:
+                Sub(ref state, bus);
+                break;
+            case >= 0x98 and <= 0x9F:
+                Sbc(ref state, bus);
+                break;
 
             case >= 0x80 and <= 0xBF:
                 throw new NotImplementedException("Alu8");
@@ -104,8 +110,34 @@ public class OpcodeHandler : IOpcodeHandler
         int result = state.A + value + carry;
 
         state.ClearFlags();
-        state.SetHalfCarryFlag((state.A & 0xF) + (value & 0xF) + carry);
-        state.SetCarryFlag_8Bit(result);
+        state.SetHalfCarryFlag((state.A & 0xF) + (value & 0xF) + carry > 0xF);
+        state.SetCarryFlag(result > 0xFF);
+
+        // Set zero flag after down-casting
+        state.A = (byte)result;
+        state.SetZeroFlag(state.A);
+    }
+
+    private static void Sub(ref CpuState state, IBus bus)
+    {
+        uint operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
+        SubFromAInternal(ref state, operand);
+    }
+
+    private static void Sbc(ref CpuState state, IBus bus)
+    {
+        uint operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
+        SubFromAInternal(ref state, operand, state.CarryFlag);
+    }
+
+    private static void SubFromAInternal(ref CpuState state, uint value, byte carry = 0)
+    {
+        uint result = state.A - value - carry;
+
+        state.ClearFlags();
+        state.SetN();
+        state.SetHalfCarryFlag((state.A & 0xF) < (value & 0xF) + carry);
+        state.SetCarryFlag(result > 0xFF);
 
         // Set zero flag after down-casting
         state.A = (byte)result;

@@ -25,33 +25,23 @@ internal static class CpuStateExtensions
     }
 
     /**
-     * Set half-carry flag if value has overflow from bit 3
+     * Set half-carry flag
      */
-    public static void SetHalfCarryFlag(ref this CpuState state, int value)
+    public static void SetHalfCarryFlag(ref this CpuState state, bool value)
     {
         // Check for bit #3 overflow
-        state.F = value > 0xF
+        state.F = value
             ? (byte)(state.F | 0b_0010_0000)
             : (byte)(state.F & 0b_1101_1111);
     }
 
     /**
-     * Set carry flag if value has overflow from bit 8
+     * Set carry flag
      */
-    public static void SetCarryFlag_8Bit(ref this CpuState state, int value)
+    public static void SetCarryFlag(ref this CpuState state, bool value)
     {
-        // Check for bit #7 overflow
-        state.F = value > 0xFF
-            ? (byte)(state.F | 0b_0001_0000)
-            : (byte)(state.F & 0b_1110_1111);
-    }
-
-    /**
-     * Set carry flag if value has overflow from bit 16
-     */
-    public static void SetCarryFlag_16Bit(ref this CpuState state, int value)
-    {
-        state.C = value > 0xFFFF
+        // Check for bit #3 overflow
+        state.F = value
             ? (byte)(state.F | 0b_0001_0000)
             : (byte)(state.F & 0b_1110_1111);
     }
