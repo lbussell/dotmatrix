@@ -54,6 +54,9 @@ public class OpcodeHandler : IOpcodeHandler
                 Load8Block1(ref state, bus);
                 break;
 
+            /*
+             * Block 2
+             */
             case >= 0x80 and <= 0x87:
                 Add(ref state, bus);
                 break;
@@ -79,20 +82,51 @@ public class OpcodeHandler : IOpcodeHandler
                 Cp(ref state, bus);
                 break;
 
+            /*
+             * Block 3
+             */
+
+            // 16-bit LSM
             case 0xC1 or 0xD1 or 0xE1 or 0xF1:
                 Pop(ref state, bus);
                 break;
             case 0xC5 or 0xD5 or 0xE5 or 0xF5:
                 Push(ref state, bus);
                 break;
+            case 0xF9:
+                Load16SpHl(ref state);
+                break;
 
+            // 8-bit ALU
+            case 0xC6:
+                AddImmediate(ref state, bus);
+                break;
+            case 0xCE:
+                AdcImmediate(ref state, bus);
+                break;
+            case 0xD6:
+                SubImmediate(ref state, bus);
+                break;
+            case 0xDE:
+                SbcImmediate(ref state, bus);
+                break;
+            case 0xE6:
+                AndImmediate(ref state, bus);
+                break;
+            case 0xEE:
+                XorImmediate(ref state, bus);
+                break;
+            case 0xF6:
+                OrImmediate(ref state, bus);
+                break;
+            case 0xFE:
+                CpImmediate(ref state, bus);
+                break;
+
+            // 8-bit LSM
             case 0xE0 or 0xE2 or 0xEA:
             case 0xF0 or 0xF2 or 0xFA:
                 Load8Block3(ref state, bus);
-                break;
-
-            case 0xF9:
-                Load16SpHl(ref state);
                 break;
 
             default:
@@ -102,17 +136,17 @@ public class OpcodeHandler : IOpcodeHandler
 
     #region 8-Bit ALU
 
-    private static void Add(ref CpuState state, IBus bus)
-    {
-        byte operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
-        AddToAInternal(ref state, operand);
-    }
+    private static void Add(ref CpuState state, IBus bus) =>
+        AddToAInternal(ref state, GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
 
-    private static void Adc(ref CpuState state, IBus bus)
-    {
-        int operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
-        AddToAInternal(ref state, operand, state.CarryFlag);
-    }
+    private static void AddImmediate(ref CpuState state, IBus bus) =>
+        AddToAInternal(ref state, Immediate8(ref state, bus));
+
+    private static void Adc(ref CpuState state, IBus bus) =>
+        AddToAInternal(ref state, GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)), state.CarryFlag);
+
+    private static void AdcImmediate(ref CpuState state, IBus bus) =>
+        AddToAInternal(ref state, Immediate8(ref state, bus), state.CarryFlag);
 
     private static void AddToAInternal(ref CpuState state, int value, byte carry = 0)
     {
@@ -127,27 +161,27 @@ public class OpcodeHandler : IOpcodeHandler
         state.SetZeroFlag(state.A);
     }
 
-    /**
-     * Subtract from A
-     */
-    private static void Sub(ref CpuState state, IBus bus)
-    {
-        uint operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
-        state.A = SubFromAInternal(ref state, operand);
-    }
+    private static void Sub(ref CpuState state, IBus bus) =>
+        state.A = SubFromAInternal(ref state, GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
 
-    /**
-     * Subtract from A with carry
-     */
-    private static void Sbc(ref CpuState state, IBus bus)
-    {
-        uint operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
-        state.A = SubFromAInternal(ref state, operand, state.CarryFlag);
-    }
+    private static void SubImmediate(ref CpuState state, IBus bus) =>
+        state.A = SubFromAInternal(ref state, Immediate8(ref state, bus));
+
+    private static void Sbc(ref CpuState state, IBus bus) =>
+        state.A = SubFromAInternal(ref state, GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)), state.CarryFlag);
+
+    private static void SbcImmediate(ref CpuState state, IBus bus) =>
+        state.A = SubFromAInternal(ref state, Immediate8(ref state, bus), state.CarryFlag);
 
     private static void Cp(ref CpuState state, IBus bus)
     {
         uint operand = GetR8(ref state, bus, (byte)(state.Ir & 0b_0111));
+        _ = SubFromAInternal(ref state, operand);
+    }
+
+    private static void CpImmediate(ref CpuState state, IBus bus)
+    {
+        uint operand = Immediate8(ref state, bus);
         _ = SubFromAInternal(ref state, operand);
     }
 
@@ -164,24 +198,42 @@ public class OpcodeHandler : IOpcodeHandler
         return (byte)result;
     }
 
-    private static void And(ref CpuState state, IBus bus)
+    private static void And(ref CpuState state, IBus bus) =>
+        AndInternal(ref state, bus, GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
+
+    private static void AndImmediate(ref CpuState state, IBus bus) =>
+        AndInternal(ref state, bus, Immediate8(ref state, bus));
+
+    private static void AndInternal(ref CpuState state, IBus bus, byte operand)
     {
-        state.A = (byte)(state.A & GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
+        state.A = (byte)(state.A & operand);
         state.ClearFlags();
         state.SetHalfCarryFlag(true);
         state.SetZeroFlag(state.A);
     }
 
-    private static void Xor(ref CpuState state, IBus bus)
+    private static void Xor(ref CpuState state, IBus bus) =>
+        XorInternal(ref state, bus, GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
+
+    private static void XorImmediate(ref CpuState state, IBus bus) =>
+        XorInternal(ref state, bus, Immediate8(ref state, bus));
+
+    private static void XorInternal(ref CpuState state, IBus bus, byte operand)
     {
-        state.A = (byte)(state.A ^ GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
+        state.A = (byte)(state.A ^ operand);
         state.ClearFlags();
         state.SetZeroFlag(state.A);
     }
 
-    private static void Or(ref CpuState state, IBus bus)
+    private static void Or(ref CpuState state, IBus bus) =>
+        OrInternal(ref state, bus, GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
+
+    private static void OrImmediate(ref CpuState state, IBus bus) =>
+        OrInternal(ref state, bus, Immediate8(ref state, bus));
+
+    private static void OrInternal(ref CpuState state, IBus bus, byte operand)
     {
-        state.A = (byte)(state.A | GetR8(ref state, bus, (byte)(state.Ir & 0b_0111)));
+        state.A = (byte)(state.A | operand);
         state.ClearFlags();
         state.SetZeroFlag(state.A);
     }
