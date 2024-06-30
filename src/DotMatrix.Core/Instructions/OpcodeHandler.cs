@@ -53,13 +53,21 @@ public class OpcodeHandler : IOpcodeHandler
                 throw new NotImplementedException("Jr");
 
             case 0x27:
-                throw new NotImplementedException("Daa");
+                Daa(ref state);
+                break;
             case 0x2F:
-                throw new NotImplementedException("Cpl");
-            case 0x37:
-                throw new NotImplementedException("Scf");
-            case 0x3F:
-                throw new NotImplementedException("Ccf");
+                Cpl(ref state);
+                break;
+            case 0x37: // SCF - Set Carry Flag
+                state.ClearN();
+                state.SetHalfCarryFlag(false);
+                state.SetCarryFlag(true);
+                break;
+            case 0x3F: // CCF - Complement Carry Flag
+                state.ClearN();
+                state.SetHalfCarryFlag(false);
+                state.ComplementCarryFlag();
+                break;
 
             case 0x76:
                 throw new NotImplementedException("Halt");
@@ -148,6 +156,42 @@ public class OpcodeHandler : IOpcodeHandler
     }
 
     #region 8-Bit ALU
+
+    private static void Daa(ref CpuState state)
+    {
+        byte offset = 0;
+        bool carry = false;
+        bool wasSubtraction = state.GetN();
+
+        if ((!wasSubtraction && (state.A & 0xF) > 0x9) || state.GetH())
+        {
+            offset |= 0x06;
+        }
+
+        if ((!wasSubtraction && state.A > 0x99) || state.GetC())
+        {
+            offset |= 0x60;
+            carry = true;
+        }
+
+        int result = wasSubtraction
+            ? state.A - offset
+            : state.A + offset;
+
+        state.SetHalfCarryFlag(false);
+        state.SetCarryFlag(carry);
+        state.SetZeroFlag(result);
+
+        state.A = (byte)result;
+    }
+
+
+    private static void Cpl(ref CpuState state)
+    {
+        state.A = (byte)~state.A;
+        state.SetN();
+        state.SetHalfCarryFlag(true);
+    }
 
     private static void Inc(ref CpuState state, IBus bus)
     {
