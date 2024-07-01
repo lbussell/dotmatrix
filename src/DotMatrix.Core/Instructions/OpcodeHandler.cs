@@ -37,17 +37,21 @@ public class OpcodeHandler : IOpcodeHandler
                 break;
 
             case 0x07:
-                throw new NotImplementedException("Rlca");
+                Rlca(ref state, bus);
+                break;
             case 0x0F:
-                throw new NotImplementedException("Rrca");
+                Rrca(ref state, bus);
+                break;
             case 0x10:
                 throw new NotImplementedException("Stop");
-            case 0x17:
-                throw new NotImplementedException("Rla");
+            case 0x17: // RLA
+                Rla(ref state, bus);
+                break;
             case 0x18:
                 throw new NotImplementedException("Jr i8");
             case 0x1F:
-                throw new NotImplementedException("Rra");
+                Rra(ref state, bus);
+                break;
 
             case 0x20 or 0x28 or 0x30 or 0x38:
                 throw new NotImplementedException("Jr");
@@ -106,6 +110,8 @@ public class OpcodeHandler : IOpcodeHandler
             /*
              * Block 3
              */
+            case 0xCB:
+                throw new NotImplementedException();
 
             // 16-bit LSM
             case 0xC1 or 0xD1 or 0xE1 or 0xF1:
@@ -522,6 +528,136 @@ public class OpcodeHandler : IOpcodeHandler
                 state.A = value;
                 break;
         }
+    }
+
+    #endregion
+
+    #region CB prefix
+
+    private static void CB(ref CpuState state, IBus bus)
+    {
+        int instruction = (state.Ir & 0b_0011_1000) >> 3;
+        int target = state.Ir & 0b_0111;
+
+        switch (instruction)
+        {
+            case 0:
+                Rlc(ref state, bus, (byte)target);
+                break;
+            case 1:
+                Rrc(ref state, bus, (byte)target);
+                break;
+            case 2:
+                Rl(ref state, bus, (byte)target);
+                break;
+            case 3:
+                Rr(ref state, bus, (byte)target);
+                break;
+            case 4:
+                Sla(ref state, bus, (byte)target);
+                break;
+            case 5:
+                Sra(ref state, bus, (byte)target);
+                break;
+            case 6:
+                Swap(ref state, bus, (byte)target);
+                break;
+            case 7:
+                Srl(ref state, bus, (byte)target);
+                break;
+        }
+    }
+
+    private static void Rlca(ref CpuState state, IBus bus)
+    {
+        Rlc(ref state, bus, Target.A);
+        state.SetZeroFlag(false);
+    }
+
+    private static void Rlc(ref CpuState state, IBus bus, byte target)
+    {
+        byte reg = GetR8(ref state, bus, target);
+        byte bit7 = (byte)((reg & 0b_1000_0000) >> 7);
+        byte result = (byte)((reg << 1) + bit7);
+        SetR8(ref state, bus, result, target);
+
+        state.ClearFlags();
+        state.SetZeroFlag(result);
+        state.SetCarryFlag(bit7 != 0);
+    }
+
+    private static void Rrca(ref CpuState state, IBus bus)
+    {
+        Rrc(ref state, bus, Target.A);
+        state.SetZeroFlag(false);
+    }
+
+    private static void Rrc(ref CpuState state, IBus bus, byte target)
+    {
+        byte reg = GetR8(ref state, bus, target);
+        byte bit0 = (byte)(reg & 0b_0000_0001);
+        byte result = (byte)((reg >> 1) + (bit0 << 7));
+        SetR8(ref state, bus, result, target);
+
+        state.ClearFlags();
+        state.SetZeroFlag(result);
+        state.SetCarryFlag(bit0 != 0);
+    }
+
+    private static void Rla(ref CpuState state, IBus bus)
+    {
+        Rl(ref state, bus, Target.A);
+        state.SetZeroFlag(false);
+    }
+
+    private static void Rl(ref CpuState state, IBus bus, byte target)
+    {
+        byte reg = GetR8(ref state, bus, target);
+        byte bit7 = (byte)((reg & 0b_1000_0000) >> 7);
+        byte result = (byte)((reg << 1) + state.GetCValue());
+        SetR8(ref state, bus, result, target);
+
+        state.ClearFlags();
+        state.SetZeroFlag(result);
+        state.SetCarryFlag(bit7 != 0);
+    }
+
+    private static void Rra(ref CpuState state, IBus bus)
+    {
+        Rr(ref state, bus, Target.A);
+        state.SetZeroFlag(false);
+    }
+
+    private static void Rr(ref CpuState state, IBus bus, byte target)
+    {
+        byte reg = GetR8(ref state, bus, target);
+        byte bit0 = (byte)(reg & 0b_0000_0001);
+        byte result = (byte)((reg >> 1) + (state.GetCValue() << 7));
+        SetR8(ref state, bus, result, target);
+
+        state.ClearFlags();
+        state.SetZeroFlag(result);
+        state.SetCarryFlag(bit0 != 0);
+    }
+
+    private static void Sla(ref CpuState state, IBus bus, byte target)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Sra(ref CpuState state, IBus bus, byte target)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Swap(ref CpuState state, IBus bus, byte target)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void Srl(ref CpuState state, IBus bus, byte target)
+    {
+        throw new NotImplementedException();
     }
 
     #endregion

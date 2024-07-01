@@ -21,8 +21,10 @@ internal static class CpuStateExtensions
     public static void ClearN(ref this CpuState state) => state.F = (byte)(state.F & ~NMask);
 
     public static bool GetH(this CpuState state) => (state.F & HMask) > 0;
-    
+
     public static bool GetC(this CpuState state) => (state.F & CMask) > 0;
+
+    public static int GetCValue(this CpuState state) => (state.F & CMask) >> 4;
 
     /**
      * Set zero flag if value is zero, otherwise unset flag
@@ -30,6 +32,13 @@ internal static class CpuStateExtensions
     public static void SetZeroFlag(ref this CpuState state, int value)
     {
         state.F = value == 0
+            ? (byte)(state.F | 0b_1000_0000)
+            : (byte)(state.F & 0b_0111_1111);
+    }
+
+    public static void SetZeroFlag(ref this CpuState state, bool value)
+    {
+        state.F = value
             ? (byte)(state.F | 0b_1000_0000)
             : (byte)(state.F & 0b_0111_1111);
     }

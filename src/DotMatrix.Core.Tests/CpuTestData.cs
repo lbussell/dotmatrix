@@ -27,8 +27,17 @@ public record CpuTestData(
             return new CpuLog(address, value, type);
         });
 
-    public static IEnumerable<object[]> GetTestData(IEnumerable<int> opcodes) =>
-        GetTestDataInternal(opcodes).Select(testData => new object[] { testData });
+    public static IEnumerable<object[]> GetTestData(IEnumerable<int> opcodes, string? name = null)
+    {
+        IEnumerable<CpuTestData> tests = GetTestDataInternal(opcodes);
+
+        if (name != null)
+        {
+            tests = tests.Where(td => td.Name == name);
+        }
+
+        return tests.Select(testData => new object[] { testData });
+    }
 
     private static CpuTestData FromModel(CpuTestDataModel model)
     {
