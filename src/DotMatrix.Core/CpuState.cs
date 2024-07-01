@@ -93,6 +93,17 @@ public record struct CpuState
         TCycles += MCycleLength * numberOfMCycles;
     }
 
+    public bool GetCondition(byte value)
+    {
+        return value switch
+        {
+            0 => !this.GetZ(),
+            1 => this.GetZ(),
+            2 => !this.GetC(),
+            _ => this.GetC(),
+        };
+    }
+
     public override string ToString()
     {
         return $"{{ IR:${Ir:X2},PC:${Pc:X4},TC:{TCycles} R:${A:X2},{F:X2},{B:X2},{C:X2},{D:X2},{E:X2},{H:X2},{L:X2}, SP:${Sp:X4} }}";

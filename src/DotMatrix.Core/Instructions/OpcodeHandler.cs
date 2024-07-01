@@ -191,10 +191,46 @@ public class OpcodeHandler : IOpcodeHandler
                 Load8Block3(ref state, bus);
                 break;
 
+            // Control
+            case 0xC0 or 0xC8 or 0xD0 or 0xD8:
+                RetCond(ref state, bus);
+                break;
+            case 0xC9:
+                Ret(ref state, bus);
+                break;
+            case 0xE9:
+                JumpTo(ref state, state.HL);
+                break;
+
             default:
                 throw new NotImplementedException($"Unexpected opcode {state.Ir}");
         }
     }
+
+    #region Control
+
+    private static void JumpTo(ref CpuState state, ushort value)
+    {
+        state.Pc = value;
+    }
+
+    private static void RetCond(ref CpuState state, IBus bus)
+    {
+        byte c = (byte)((state.Ir & 0b_0001_1000) >> 3);
+        if (state.GetCondition(c))
+        {
+            Ret(ref state, bus);
+        }
+        state.IncrementMCycles();
+    }
+
+    private static void Ret(ref CpuState state, IBus bus)
+    {
+        state.Pc = PopInternal(ref state, bus);
+        state.IncrementMCycles(2);
+    }
+
+    #endregion
 
     #region 16-Bit ALU
 
@@ -432,12 +468,17 @@ public class OpcodeHandler : IOpcodeHandler
 
     private static void Pop(ref CpuState state, IBus bus)
     {
+        ushort value = PopInternal(ref state, bus);
         byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
+        SetR16Stk(ref state, target, value);
+    }
+
+    private static ushort PopInternal(ref CpuState state, IBus bus)
+    {
         byte lsb = bus[state.Sp++];
         byte msb = bus[state.Sp++];
-        ushort value = (ushort)((msb << 8) | lsb);
         state.IncrementMCycles();
-        SetR16Stk(ref state, target, value);
+        return (ushort)((msb << 8) | lsb);
     }
 
     private static ushort GetR16Stk(ref CpuState state, IBus bus, byte target)
