@@ -23,6 +23,7 @@ public static class Util
         for (int i = 0; i <= NumberOfOpcodes; i += 1)
         {
             bogusCpuState.Ir = (byte)i;
+            bogusCpuState.NextInstructionCb = false;
 
             bool result = false;
             try

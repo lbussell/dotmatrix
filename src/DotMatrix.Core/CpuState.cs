@@ -29,7 +29,7 @@ public record struct CpuState
     /// Instruction Register. Contains the next instruction to be executed.
     /// </summary>
     public byte Ir;
-    public bool IrIsCb;
+    public bool NextInstructionCb;
 
     public long TCycles;
 

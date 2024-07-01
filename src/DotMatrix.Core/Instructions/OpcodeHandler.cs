@@ -4,16 +4,39 @@ public class OpcodeHandler : IOpcodeHandler
 {
     public void HandleOpcode(ref CpuState state, IBus bus)
     {
+        if (state.NextInstructionCb)
+        {
+            CB(ref state, bus);
+            state.NextInstructionCb = false;
+            return;
+        }
+
         switch (state.Ir)
         {
+            /*
+             * Block 0
+             */
+
             case 0x00:
                 return; // NoOp
 
+            // 16-bit LSM
             case 0x01 or 0x11 or 0x21 or 0x31:
                 Load16(ref state, bus);
                 break;
             case 0x08:
                 Load16ToMemory(ref state, bus);
+                break;
+
+            // 16-bit ALU
+            case 0x03 or 0x13 or 0x23 or 0x33:
+                Inc16(ref state, bus);
+                break;
+            case 0x09 or 0x19 or 0x29 or 0x39:
+                Add16(ref state);
+                break;
+            case 0x0B or 0x1B or 0x2B or 0x3B:
+                Dec16(ref state, bus);
                 break;
 
             case 0x02 or 0x06 or 0x0A or 0x0E:
@@ -111,7 +134,19 @@ public class OpcodeHandler : IOpcodeHandler
              * Block 3
              */
             case 0xCB:
+                CBNext(ref state);
+                break;
+
+            case 0xCC:
                 throw new NotImplementedException();
+
+            // 16-bit ALU
+            case 0xE8:
+                AddSpImmediate8(ref state, bus);
+                break;
+            case 0xF8:
+                LoadSpImmediateToHl(ref state, bus);
+                break;
 
             // 16-bit LSM
             case 0xC1 or 0xD1 or 0xE1 or 0xF1:
@@ -160,6 +195,61 @@ public class OpcodeHandler : IOpcodeHandler
                 throw new NotImplementedException($"Unexpected opcode {state.Ir}");
         }
     }
+
+    #region 16-Bit ALU
+
+    private static void Inc16(ref CpuState state, IBus bus)
+    {
+        byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
+        int result = GetR16(ref state, target) + 1;
+        SetR16(ref state, bus, target, (ushort)result);
+    }
+
+    private static void Dec16(ref CpuState state, IBus bus)
+    {
+        byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
+        int result = GetR16(ref state, target) - 1;
+        SetR16(ref state, bus, target, (ushort)result);
+    }
+
+    private static void Add16(ref CpuState state)
+    {
+        byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
+        ushort r16 = GetR16(ref state, target);
+        int result = state.HL + r16;
+
+        state.ClearN();
+        state.SetHalfCarryFlag((state.HL & 0xFFF) + (r16 & 0xFFF) > 0xFFF);
+        state.SetCarryFlag(result > 0xFFFF);
+
+        state.HL = (ushort)(result & 0xFFFF);
+    }
+
+    private static void AddSpImmediate8(ref CpuState state, IBus bus)
+    {
+        state.Sp = GetSpPlusSigned8(ref state, bus);
+        state.IncrementMCycles(2);
+    }
+
+    private static void LoadSpImmediateToHl(ref CpuState state, IBus bus)
+    {
+        state.HL = GetSpPlusSigned8(ref state, bus);
+        state.IncrementMCycles();
+    }
+
+    private static ushort GetSpPlusSigned8(ref CpuState state, IBus bus)
+    {
+        sbyte imm8 = (sbyte)Immediate8(ref state, bus);
+        int result = state.Sp + imm8;
+
+        state.ClearFlags();
+        state.SetHalfCarryFlag((state.Sp & 0xF) + (imm8 & 0xF) > 0xF);
+        state.SetCarryFlag((state.Sp & 0xFF) + (imm8 & 0xFF) > 0xFF);
+
+        return (ushort)result;
+    }
+
+    #endregion
 
     #region 8-Bit ALU
 
@@ -534,7 +624,66 @@ public class OpcodeHandler : IOpcodeHandler
 
     #region CB prefix
 
+    private static void CBNext(ref CpuState state)
+    {
+        state.NextInstructionCb = true;
+    }
+
     private static void CB(ref CpuState state, IBus bus)
+    {
+        int block = (state.Ir & 0b_1100_0000) >> 6;
+        switch (block)
+        {
+            case 0:
+                Rotate(ref state, bus);
+                break;
+            case 1:
+                Bit(ref state, bus);
+                break;
+            case 2:
+                Res(ref state, bus);
+                break;
+            case 3:
+                Set(ref state, bus);
+                break;
+        }
+    }
+
+    private static void Bit(ref CpuState state, IBus bus)
+    {
+        byte target = (byte)(state.Ir & 0b_0000_0111);
+        byte r8 = GetR8(ref state, bus, target);
+
+        int bit = 1 << ((state.Ir & 0b_0011_1000) >> 3);
+
+        state.SetZeroFlag((r8 & bit) == 0);
+        state.ClearN();
+        state.SetHalfCarryFlag(true);
+    }
+
+    private static void Res(ref CpuState state, IBus bus)
+    {
+        byte target = (byte)(state.Ir & 0b_0000_0111);
+        byte r8 = GetR8(ref state, bus, target);
+
+        int bit = 1 << ((state.Ir & 0b_0011_1000) >> 3);
+        r8 &= (byte)~bit;
+
+        SetR8(ref state, bus, r8, target);
+    }
+
+    private static void Set(ref CpuState state, IBus bus)
+    {
+        byte target = (byte)(state.Ir & 0b_0000_0111);
+        byte r8 = GetR8(ref state, bus, target);
+
+        int bit = 1 << ((state.Ir & 0b_0011_1000) >> 3);
+        r8 |= (byte)bit;
+
+        SetR8(ref state, bus, r8, target);
+    }
+
+    private static void Rotate(ref CpuState state, IBus bus)
     {
         int instruction = (state.Ir & 0b_0011_1000) >> 3;
         int target = state.Ir & 0b_0111;
@@ -642,36 +791,61 @@ public class OpcodeHandler : IOpcodeHandler
 
     private static void Sla(ref CpuState state, IBus bus, byte target)
     {
-        throw new NotImplementedException();
+        byte reg = GetR8(ref state, bus, target);
+        byte bit7 = (byte)((reg & 0b_1000_0000) >> 7);
+        byte result = (byte)(reg << 1);
+        SetR8(ref state, bus, result, target);
+
+        state.ClearFlags();
+        state.SetZeroFlag(result);
+        state.SetCarryFlag(bit7 != 0);
     }
 
     private static void Sra(ref CpuState state, IBus bus, byte target)
     {
-        throw new NotImplementedException();
+        byte reg = GetR8(ref state, bus, target);
+        byte bit0 = (byte)(reg & 0b_0000_0001);
+        byte bit7only = (byte)(reg & 0b_1000_0000);
+        byte result = (byte)((reg >> 1) | bit7only) ;
+        SetR8(ref state, bus, result, target);
+
+        state.ClearFlags();
+        state.SetZeroFlag(result);
+        state.SetCarryFlag(bit0 != 0);
     }
 
     private static void Swap(ref CpuState state, IBus bus, byte target)
     {
-        throw new NotImplementedException();
+        byte r8 = GetR8(ref state, bus, target);
+        byte result = (byte)(((r8 & 0x0F) << 4) | ((r8 & 0xF0) >> 4));
+        SetR8(ref state, bus, result, target);
+        state.ClearFlags();
+        state.SetZeroFlag(result);
     }
 
     private static void Srl(ref CpuState state, IBus bus, byte target)
     {
-        throw new NotImplementedException();
+        byte reg = GetR8(ref state, bus, target);
+        byte bit0 = (byte)(reg & 0b_0000_0001);
+        byte result = (byte)(reg >> 1) ;
+        SetR8(ref state, bus, result, target);
+
+        state.ClearFlags();
+        state.SetZeroFlag(result);
+        state.SetCarryFlag(bit0 != 0);
     }
 
     #endregion
 
-    private static byte GetR16Mem(ref CpuState state, IBus bus, byte target)
+    private static ushort GetR16(ref CpuState state, byte target)
     {
         state.IncrementMCycles();
         return target switch
         {
-            0 => bus[state.BC],
-            1 => bus[state.DE],
-            2 => bus[state.HL++],
-            3 => bus[state.HL--],
-            _ => throw new ArgumentException($"{nameof(target)} should be in range [0,3]")
+            0 => state.BC,
+            1 => state.DE,
+            2 => state.HL,
+            _ => state.Sp,
         };
     }
 
@@ -693,6 +867,19 @@ public class OpcodeHandler : IOpcodeHandler
                 state.Sp = value;
                 break;
         }
+    }
+
+    private static byte GetR16Mem(ref CpuState state, IBus bus, byte target)
+    {
+        state.IncrementMCycles();
+        return target switch
+        {
+            0 => bus[state.BC],
+            1 => bus[state.DE],
+            2 => bus[state.HL++],
+            3 => bus[state.HL--],
+            _ => throw new ArgumentException($"{nameof(target)} should be in range [0,3]")
+        };
     }
 
     private static void SetR16Mem(ref CpuState state, IBus bus, byte target, byte value)

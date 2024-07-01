@@ -6,7 +6,7 @@ namespace DotMatrix.Core.Tests;
 public class CpuTests
 {
     // Uncomment to test specific opcodes for easier debugging
-    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0x17 ], "17 07 5e");
+    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0xCB ], "cb 00 22");
 
     // Test all opcodes
     public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData(GetImplementedOpcodes());
@@ -19,8 +19,11 @@ public class CpuTests
         CpuState initialState = testData.Initial.State with { Ir = testData.Opcode };
         Cpu cpu = new(bus, new OpcodeHandler(), initialState);
 
-        // Run just one instruction
-        cpu.Step();
+        int expectedTCycles = testData.Cycles.Length * 4;
+        while (cpu.State.TCycles < expectedTCycles)
+        {
+            cpu.Step();
+        }
 
         VerifyCpuLogs(testData.GetCpuLog(), bus.Log);
         cpu.State.Should().BeEquivalentTo(testData.Final.State,

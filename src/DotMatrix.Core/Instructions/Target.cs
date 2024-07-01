@@ -10,4 +10,6 @@ internal static class Target
     public const byte L = 5;
     public const byte HLIndirect = 6;
     public const byte A = 7;
+
+    public const byte Sp = 3;
 }
