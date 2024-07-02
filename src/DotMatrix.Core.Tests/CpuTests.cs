@@ -6,7 +6,7 @@ namespace DotMatrix.Core.Tests;
 public class CpuTests
 {
     // Uncomment to test specific opcodes for easier debugging
-    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0xC0 ], "c0 00 d6");
+    // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0xCD ], "cd 02 0d");
 
     // Test all opcodes
     public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData(GetImplementedOpcodes());
@@ -26,8 +26,12 @@ public class CpuTests
         }
 
         VerifyCpuLogs(testData.GetCpuLog(), bus.Log);
+
         cpu.State.Should().BeEquivalentTo(testData.Final.State,
-            options => options.Excluding(o => o.Ir));
+            options => options
+                .Excluding(o => o.Ir)
+                .Excluding(o => o.Ime)
+                .Excluding(o => o.SetImeNext));
     }
 
     private static void VerifyCpuLogs(IEnumerable<CpuLog?> expected, IEnumerable<CpuLog> actual)
@@ -37,7 +41,7 @@ public class CpuTests
 
         foreach ((CpuLog Expected, CpuLog Actual) log in logs)
         {
-            log.Expected.Should().BeEquivalentTo(log.Actual);
+            log.Actual.Should().BeEquivalentTo(log.Expected);
         }
     }
 

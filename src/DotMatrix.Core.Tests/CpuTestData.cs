@@ -62,15 +62,24 @@ public record CpuTestData(
             .Select(GetTestDataInternal)
             .SelectMany(td => td);
 
-    private static IEnumerable<CpuTestData> GetTestDataInternal(byte opcode) =>
-        ReadTestDataFromFile(opcode)
-            .Select(testData => testData with { Opcode = opcode });
+    private static IEnumerable<CpuTestData> GetTestDataInternal(byte opcode)
+    {
+        var testData = ReadTestDataFromFile(opcode) ?? [];
+        return testData.Select(td => td with { Opcode = opcode });
+    }
 
     private static IEnumerable<CpuTestData> ReadTestDataFromFile(byte opcode)
     {
-        return CpuTestDataModel
-            .FromJson(ReadTestDataFile(opcode))
-            .Select(FromModel);
+        try
+        {
+            return CpuTestDataModel
+                .FromJson(ReadTestDataFile(opcode))
+                .Select(FromModel);
+        }
+        catch (FileNotFoundException _)
+        {
+            return [];
+        }
     }
 
     private static string ReadTestDataFile(byte opcode) =>

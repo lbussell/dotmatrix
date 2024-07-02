@@ -11,6 +11,8 @@ public class OpcodeHandler : IOpcodeHandler
             return;
         }
 
+        bool setIme = state.SetImeNext;
+
         switch (state.Ir)
         {
             /*
@@ -71,13 +73,15 @@ public class OpcodeHandler : IOpcodeHandler
                 Rla(ref state, bus);
                 break;
             case 0x18:
-                throw new NotImplementedException("Jr i8");
+                JumpRelativeImmediate(ref state, bus);
+                break;
             case 0x1F:
                 Rra(ref state, bus);
                 break;
 
             case 0x20 or 0x28 or 0x30 or 0x38:
-                throw new NotImplementedException("Jr");
+                JumpRelativeImmediateCond(ref state, bus);
+                break;
 
             case 0x27:
                 Daa(ref state);
@@ -137,9 +141,6 @@ public class OpcodeHandler : IOpcodeHandler
                 CBNext(ref state);
                 break;
 
-            case 0xCC:
-                throw new NotImplementedException();
-
             // 16-bit ALU
             case 0xE8:
                 AddSpImmediate8(ref state, bus);
@@ -195,28 +196,143 @@ public class OpcodeHandler : IOpcodeHandler
             case 0xC0 or 0xC8 or 0xD0 or 0xD8:
                 RetCond(ref state, bus);
                 break;
+            case 0xC2 or 0xCA or 0xD2 or 0xDA:
+                JumpCond(ref state, bus);
+                break;
+            case 0xC3:
+                JumpImmediate(ref state, bus);
+                break;
+            case 0xC4 or 0xCC or 0xD4 or 0xDC:
+                CallCond(ref state, bus);
+                break;
+            case 0xC7 or 0xCF or 0xD7 or 0xDF or 0xE7 or 0xEF or 0xF7 or 0xFF:
+                Rst(ref state, bus);
+                break;
             case 0xC9:
                 Ret(ref state, bus);
+                break;
+            case 0xD9:
+                setIme = true;
+                Ret(ref state, bus);
+                break;
+            case 0xCD:
+                Call(ref state, bus);
                 break;
             case 0xE9:
                 JumpTo(ref state, state.HL);
                 break;
 
+            case 0xF3:
+                state.Ime = false;
+                break;
+            case 0xFB:
+                state.SetImeNext = true;
+                break;
+
+            case 0xD3 or 0xDB or 0xDD or 0xE3 or 0xE4 or 0xEB or 0xEC or 0xED or 0xF4 or 0xFC or 0xFD:
+                throw new Exception($"Unsupported opcode {state.Ir}");
+
             default:
                 throw new NotImplementedException($"Unexpected opcode {state.Ir}");
+        }
+
+        if (setIme)
+        {
+            state.Ime = true;
+            state.SetImeNext = false;
         }
     }
 
     #region Control
 
-    private static void JumpTo(ref CpuState state, ushort value)
+    private const byte Cond = 0b_0001_1000;
+
+    private static byte Condition(byte n) => (byte)((n & Cond) >> 3);
+
+    private static void Rst(ref CpuState state, IBus bus)
     {
-        state.Pc = value;
+        ushort callAddress = state.Pc;
+        bus[--state.Sp] = Hi(callAddress);
+        bus[--state.Sp] = Lo(callAddress);
+
+        byte target = (byte)(state.Ir - 0xC7);
+        JumpTo(ref state, target);
+        state.IncrementMCycles(3);
     }
+
+    private static void CallCond(ref CpuState state, IBus bus)
+    {
+        ushort addr = Immediate16(ref state, bus);
+        ushort callAddress = state.Pc;
+
+        byte c = Condition(state.Ir);
+        if (state.GetCondition(c))
+        {
+            bus[--state.Sp] = Hi(callAddress);
+            bus[--state.Sp] = Lo(callAddress);
+
+            JumpTo(ref state, addr);
+            state.IncrementMCycles(3);
+        }
+    }
+
+    private static void Call(ref CpuState state, IBus bus)
+    {
+        ushort addr = Immediate16(ref state, bus);
+        ushort callAddress = state.Pc;
+
+        bus[--state.Sp] = Hi(callAddress);
+        bus[--state.Sp] = Lo(callAddress);
+
+        JumpTo(ref state, addr);
+        state.IncrementMCycles(3);
+    }
+
+    private static void JumpRelativeImmediate(ref CpuState state, IBus bus)
+    {
+        sbyte imm8 = (sbyte)Immediate8(ref state, bus);
+        JumpRelative(ref state, imm8);
+        state.IncrementMCycles();
+    }
+
+    private static void JumpRelativeImmediateCond(ref CpuState state, IBus bus)
+    {
+        sbyte imm8 = (sbyte)Immediate8(ref state, bus);
+        byte c = Condition(state.Ir);
+        if (state.GetCondition(c))
+        {
+            JumpRelative(ref state, imm8);
+            state.IncrementMCycles();
+        }
+    }
+
+    private static void JumpCond(ref CpuState state, IBus bus)
+    {
+        ushort addr = Immediate16(ref state, bus);
+        byte c = Condition(state.Ir);
+        if (state.GetCondition(c))
+        {
+            JumpTo(ref state, addr);
+            state.IncrementMCycles();
+        }
+    }
+
+    private static void JumpImmediate(ref CpuState state, IBus bus)
+    {
+        ushort addr = Immediate16(ref state, bus);
+        JumpTo(ref state, addr);
+        state.IncrementMCycles();
+    }
+
+    private static void JumpTo(ref CpuState state, ushort value) =>
+        state.Pc = value;
+
+    private static void JumpRelative(ref CpuState state, sbyte value) =>
+        state.Pc = (ushort)(state.Pc + value);
 
     private static void RetCond(ref CpuState state, IBus bus)
     {
-        byte c = (byte)((state.Ir & 0b_0001_1000) >> 3);
+        byte c = Condition(state.Ir);
         if (state.GetCondition(c))
         {
             Ret(ref state, bus);
@@ -461,9 +577,14 @@ public class OpcodeHandler : IOpcodeHandler
     {
         byte target = (byte)((state.Ir & 0b_0011_0000) >> 4);
         ushort value = GetR16Stk(ref state, bus, target);
+        PushInternal(ref state, bus, value);
+        state.IncrementMCycles(2);
+    }
+
+    private static void PushInternal(ref CpuState state, IBus bus, ushort value)
+    {
         bus[--state.Sp] = Hi(value);
         bus[--state.Sp] = Lo(value);
-        state.IncrementMCycles(2);
     }
 
     private static void Pop(ref CpuState state, IBus bus)

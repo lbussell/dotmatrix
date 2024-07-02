@@ -34,6 +34,13 @@ public static class Util
             catch (NotImplementedException _)
             {
             }
+            catch (Exception e)
+            {
+                if (!e.Message.Contains("Unsupported"))
+                {
+                    throw;
+                }
+            }
 
             yield return result;
         }
@@ -55,7 +62,7 @@ public static class Util
                 handler.HandleOpcode(ref bogusCpuState, bus);
                 result = true;
             }
-            catch (NotImplementedException e)
+            catch (Exception e)
             {
                 if (!e.Message.Contains("Unexpected"))
                 {

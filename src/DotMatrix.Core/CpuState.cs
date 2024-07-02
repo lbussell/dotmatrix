@@ -31,6 +31,16 @@ public record struct CpuState
     public byte Ir;
     public bool NextInstructionCb;
 
+    /// <summary>
+    /// Interrupt enable
+    /// </summary>
+    public bool Ime;
+
+    /// <summary>
+    /// Whether to set Ie after the next instruction
+    /// </summary>
+    public bool SetImeNext;
+
     public long TCycles;
 
     /// <summary>

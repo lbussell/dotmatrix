@@ -16,11 +16,16 @@ class Program
 
     private static void RenderOpcodeTable()
     {
+        IEnumerable<int> unsupportedOpcodes =
+        [
+            0xD3, 0xDB, 0xDD, 0xE3, 0xE4, 0xEB, 0xEC, 0xED, 0xF4, 0xFC, 0xFD,
+        ];
+
         bool[] instructionsArray = Util.GetImplementedOpcodesArray().ToArray();
         bool[] anticipatedArray = Util.GetAnticipatedOpcodesArray().ToArray();
         string[] zippedArray = instructionsArray
             .Zip(anticipatedArray)
-            .Select(t => t.First ? "Impl" : t.Second ? "..." : " ")
+            .Select((t, i) => unsupportedOpcodes.Contains(i) ? "X" : (t.First ? "Impl" : t.Second ? "..." : " "))
             .ToArray();
 
         if (instructionsArray.Length != 0x100)
