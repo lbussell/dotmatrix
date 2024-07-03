@@ -14,6 +14,15 @@ internal class Cpu(IBus bus, IOpcodeHandler opcodeHandler, CpuState initialState
         get { return _state; }
     }
 
+    public void RunUntil(ushort address)
+    {
+        while (_state.Pc < address)
+        {
+            Console.WriteLine($"PC: ${_state.Pc:X4}");
+            Step();
+        }
+    }
+
     /**
      * One full decode-execute-fetch cycle. Not always 4 T-Cycles.
      */
