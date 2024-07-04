@@ -24,18 +24,25 @@ internal class Bus : IBus
         _rom = rom;
         _bios = bios ?? null;
         _bootRomIsAttached = bios != null;
+
+        // https://github.com/robert/gameboy-doctor?tab=readme-ov-file#2-make-2-tweaks-to-your-emulator
+        // Hardcode LY Reg to make outputs more deterministic for now
+        _memory[0xFF44] = 0x90;
     }
 
     public byte this[ushort address]
     {
-        get => MMap(address)[address];
-        set => MMap(address)[address] = value;
+        get => MMap(address)[address % MemorySize];
+        set => MMap(address)[address % MemorySize] = value;
     }
 
-    private byte[] MMap(ushort address) => address switch
+    private byte[] MMap(ushort address)
+    {
+        return address switch
         {
             <= BootRomEnd when _bootRomIsAttached => _bios!,
             <= RomBankEnd => _rom,
             _ => _memory,
         };
+    }
 }

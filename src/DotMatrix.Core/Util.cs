@@ -31,7 +31,7 @@ public static class Util
                 handler.HandleOpcode(ref bogusCpuState, bus);
                 result = true;
             }
-            catch (NotImplementedException _)
+            catch (NotImplementedException)
             {
             }
             catch (Exception e)

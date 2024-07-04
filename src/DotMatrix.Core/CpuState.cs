@@ -114,10 +114,12 @@ public record struct CpuState
         };
     }
 
-    public override string ToString()
-    {
-        return $"{{ IR:${Ir:X2},PC:${Pc:X4},TC:{TCycles} R:${A:X2},{F:X2},{B:X2},{C:X2},{D:X2},{E:X2},{H:X2},{L:X2}, SP:${Sp:X4} }}";
-    }
+    /*
+     * Format:
+     * A:00 F:11 B:22 C:33 D:44 E:55 H:66 L:77 SP:8888 PC:9999
+     */
+    public override string ToString() =>
+        $"A:{A:X2} F:{F:X2} B:{B:X2} C:{C:X2} D:{D:X2} E:{E:X2} H:{H:X2} L:{L:X2} SP:{Sp:X4} PC:{Pc:X4}";
 
     /// <summary>
     /// Combines two 8-bit values into one 16-bit value

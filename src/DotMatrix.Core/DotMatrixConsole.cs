@@ -13,27 +13,33 @@ public class DotMatrixConsole
         _bus = bus;
     }
 
-    public static DotMatrixConsole CreateInstance(byte[] bios, byte[] rom)
+    public static DotMatrixConsole CreateInstance(byte[] rom, byte[]? bios = null, bool loggingEnabled = false)
     {
         Bus bus = new(rom, bios);
 
         OpcodeHandler opcodeHandler = new();
-        Cpu cpu = new(bus, opcodeHandler);
+
+        CpuState initialState = new()
+        {
+            A = 0x01,
+            F = 0xB0,
+            B = 0x00,
+            C = 0x13,
+            D = 0x00,
+            E = 0xD8,
+            H = 0x01,
+            L = 0x4D,
+            Sp = 0xFFFE,
+            Pc = 0x0100,
+        };
+
+        Cpu cpu = new(bus, opcodeHandler, loggingEnabled, initialState);
 
         return new DotMatrixConsole(cpu, bus);
     }
 
     public void Run()
     {
-        try
-        {
-            _cpu.RunUntil(0x100);
-            Console.WriteLine(_cpu.State);
-        }
-        catch (Exception _)
-        {
-            Console.WriteLine(_cpu.State);
-            throw;
-        }
+        _cpu.Run(int.MaxValue);
     }
 }

@@ -1,5 +1,6 @@
 [submodule "src/DotMatrix.Core.Tests/CpuTestData"]
-	path = src/DotMatrix.Core.Tests/CpuTestData
+	path = src/DotMatrix.Core.Tests/Opcodes/CpuTestData
 	url = https://github.com/lbussell/GameboyCPUTests
-[submodule "./CpuTestData"]
-	branch = remove-v1
+[submodule "src/DotMatrix.Core.Tests/Blargg/Roms"]
+	path = src/DotMatrix.Core.Tests/Blargg/Roms
+	url = https://github.com/lbussell/blargg-gb-test-roms

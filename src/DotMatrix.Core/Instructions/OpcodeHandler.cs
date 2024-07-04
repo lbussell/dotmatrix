@@ -428,11 +428,10 @@ public class OpcodeHandler : IOpcodeHandler
 
         state.SetHalfCarryFlag(false);
         state.SetCarryFlag(carry);
-        state.SetZeroFlag(result);
+        state.SetZeroFlag(result & 0xFF);
 
         state.A = (byte)result;
     }
-
 
     private static void Cpl(ref CpuState state)
     {

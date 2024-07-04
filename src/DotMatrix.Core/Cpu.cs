@@ -2,32 +2,53 @@ using DotMatrix.Core.Instructions;
 
 namespace DotMatrix.Core;
 
-internal class Cpu(IBus bus, IOpcodeHandler opcodeHandler, CpuState initialState = new())
+internal class Cpu
 {
-    private readonly IBus _bus = bus;
-    private readonly IOpcodeHandler _opcodeHandler = opcodeHandler;
-    private CpuState _state = initialState;
+    private readonly IBus _bus;
+    private readonly IOpcodeHandler _opcodeHandler;
+    private readonly bool _loggingEnabled;
+    private CpuState _state;
+
+    public Cpu(IBus bus, IOpcodeHandler opcodeHandler, bool enableLogging, CpuState initialState = new())
+    {
+        _bus = bus;
+        _opcodeHandler = opcodeHandler;
+        _loggingEnabled = enableLogging;
+        _state = initialState;
+    }
 
     // Needs to be internal so that state can be checked in tests
-    internal CpuState State
-    {
-        get { return _state; }
-    }
+    internal CpuState State => _state;
 
-    public void RunUntil(ushort address)
+    public void Run(int instructions)
     {
-        while (_state.Pc < address)
+        for (int i = 0; i < instructions; i += 1)
         {
-            Console.WriteLine($"PC: ${_state.Pc:X4}");
+            if (_loggingEnabled)
+            {
+                Console.WriteLine($"{_state} {PcMem()}");
+            }
+
             Step();
+
+            // Run the next instruction immediately if it's a CB-prefix instruction
+            if (_state.NextInstructionCb)
+            {
+                Step();
+            }
         }
     }
+
+    private string PcMem() =>
+        $"PCMEM:{_bus[_state.Pc]:X2},{_bus[(ushort)(_state.Pc + 1)]:X2},{_bus[(ushort)(_state.Pc + 2)]:X2},{_bus[(ushort)(_state.Pc + 3)]:X2}";
 
     /**
      * One full decode-execute-fetch cycle. Not always 4 T-Cycles.
      */
     internal void Step()
     {
+        _state.Pc += 1;
+
         // Opcode handler is responsible for incrementing the T-cycles.
         // A typical decode-execute-fetch loop takes 4 T-Cycles (1 M-Cycle) for most instructions
         // If an instruction takes more time than that, it will also happen during the HandleOpcode call
@@ -41,6 +62,6 @@ internal class Cpu(IBus bus, IOpcodeHandler opcodeHandler, CpuState initialState
     private byte Fetch()
     {
         _state.IncrementMCycles();
-        return _bus[_state.Pc++];
+        return _bus[_state.Pc];
     }
 }
