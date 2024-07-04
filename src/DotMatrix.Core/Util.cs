@@ -14,7 +14,7 @@ public static class Util
             .Select(data => data.opcode);
     }
 
-    public static IEnumerable<bool> GetImplementedOpcodesArray()
+    private static IEnumerable<bool> GetImplementedOpcodesArray()
     {
         OpcodeHandler handler = new();
         IBus bus = new DummyBus();

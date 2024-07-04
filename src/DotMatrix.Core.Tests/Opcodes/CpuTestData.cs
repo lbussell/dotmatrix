@@ -9,7 +9,7 @@ public record CpuTestData(
     CpuTestState Final,
     JsonValue[]?[] Cycles)
 {
-    private const string TestDataDir = "CpuTestData/v2/";
+    private const string TestDataDir = "Opcodes/CpuTestData/v2/";
 
     public byte Opcode { get; private init; }
 

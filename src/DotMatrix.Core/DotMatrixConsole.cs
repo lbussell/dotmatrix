@@ -19,21 +19,10 @@ public class DotMatrixConsole
 
         OpcodeHandler opcodeHandler = new();
 
-        CpuState initialState = new()
+        Cpu cpu = new(bus, opcodeHandler, CpuState.GetPostBootRomState())
         {
-            A = 0x01,
-            F = 0xB0,
-            B = 0x00,
-            C = 0x13,
-            D = 0x00,
-            E = 0xD8,
-            H = 0x01,
-            L = 0x4D,
-            Sp = 0xFFFE,
-            Pc = 0x0100,
+            LoggingEnabled = loggingEnabled,
         };
-
-        Cpu cpu = new(bus, opcodeHandler, loggingEnabled, initialState);
 
         return new DotMatrixConsole(cpu, bus);
     }

@@ -98,6 +98,23 @@ public record struct CpuState
 
     public byte CarryFlag => (byte)((F & 0b_0001_0000) >> 4);
 
+    public static CpuState GetPostBootRomState()
+    {
+        return new CpuState
+        {
+            A = 0x01,
+            F = 0xB0,
+            B = 0x00,
+            C = 0x13,
+            D = 0x00,
+            E = 0xD8,
+            H = 0x01,
+            L = 0x4D,
+            Sp = 0xFFFE,
+            Pc = 0x0100,
+        };
+    }
+
     public void IncrementMCycles(int numberOfMCycles = 1)
     {
         TCycles += MCycleLength * numberOfMCycles;

@@ -6,16 +6,16 @@ internal class Cpu
 {
     private readonly IBus _bus;
     private readonly IOpcodeHandler _opcodeHandler;
-    private readonly bool _loggingEnabled;
     private CpuState _state;
 
-    public Cpu(IBus bus, IOpcodeHandler opcodeHandler, bool enableLogging, CpuState initialState = new())
+    public Cpu(IBus bus, IOpcodeHandler opcodeHandler, CpuState initialState = new())
     {
         _bus = bus;
         _opcodeHandler = opcodeHandler;
-        _loggingEnabled = enableLogging;
         _state = initialState;
     }
+
+    public bool LoggingEnabled { get; init; } = false;
 
     // Needs to be internal so that state can be checked in tests
     internal CpuState State => _state;
@@ -24,7 +24,7 @@ internal class Cpu
     {
         for (int i = 0; i < instructions; i += 1)
         {
-            if (_loggingEnabled)
+            if (LoggingEnabled)
             {
                 Console.WriteLine($"{_state} {PcMem()}");
             }
@@ -57,6 +57,37 @@ internal class Cpu
         // The fetch happens simultaneously with the last M-Cycle of an instruction
         // So don't add to cycles here since it was already accounted for in the instruction
         _state.Ir = Fetch();
+    }
+
+    private void UpdateTimers()
+    {
+        UpdateDiv();
+    }
+
+    private void UpdateDiv()
+    {
+        // Increment at 16384 Hz or every 64 M-cycles
+        if (_state.TCycles % (64 * 4) == 0)
+        {
+            _bus[Bus.DIV] += 1;
+        }
+    }
+
+    private void UpdateTima()
+    {
+        byte tac = _bus[Bus.TAC];
+        long tCycles = _state.TCycles;
+
+        bool timaEnabled = (tac & 0b_0000_0100) > 0;
+        byte clockSelect = (byte)(tac & 0b_0000_0011);
+
+        bool shouldUpdate = timaEnabled && clockSelect switch
+        {
+            0 => tCycles % (256 * 4) == 0,
+            1 => tCycles % (4 * 4) == 0,
+            2 => tCycles % (16 * 4) == 0,
+            3 => tCycles % (64 * 4) == 0,
+        };
     }
 
     private byte Fetch()

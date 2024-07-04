@@ -16,7 +16,7 @@ public record CpuTestState(CpuState State, int[][] Ram)
                 F = model.F,
                 H = model.H,
                 L = model.L,
-                Pc = model.Pc,
+                Pc = (ushort)(model.Pc - 1),
                 Sp = model.Sp,
                 TCycles = tCycles,
             },

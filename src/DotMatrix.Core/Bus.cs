@@ -3,7 +3,6 @@ namespace DotMatrix.Core;
 internal class Bus : IBus
 {
     #region Memory Map
-
     private const int MemorySize = 0xFFFF;
     private const int BootRom = 0x0000;
     private const int BootRomEnd = 0x00FF;
@@ -11,7 +10,13 @@ internal class Bus : IBus
     private const int RomBank00 = 0x0000;
     private const int RomBank01NN = 0x4000;
     private const int RomBankEnd = 0x7FFF;
+    #endregion
 
+    #region Timer Registers
+    internal const int DIV = 0xFF04;
+    internal const int TIMA = 0xFF05;
+    internal const int TMA = 0xFF06;
+    internal const int TAC = 0xFF07;
     #endregion
 
     private readonly byte[] _memory = new byte[MemorySize];

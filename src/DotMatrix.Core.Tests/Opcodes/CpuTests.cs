@@ -19,14 +19,9 @@ public class CpuTests
         CpuState initialState = testData.Initial.State with { Ir = testData.Opcode };
         Cpu cpu = new(bus, new OpcodeHandler(), initialState);
 
-        cpu.Step();
-        if (cpu.State.NextInstructionCb)
-        {
-            cpu.Step();
-        }
+        cpu.Run(instructions: 1);
 
         VerifyCpuLogs(testData.GetCpuLog(), bus.Log);
-
         cpu.State.Should().BeEquivalentTo(testData.Final.State,
             options => options
                 .Excluding(o => o.Ir)

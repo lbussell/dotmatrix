@@ -28,7 +28,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="CpuTestData\v2\*.json">
+      <Content Include="Opcodes\CpuTestData\v2\*.json">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
 
