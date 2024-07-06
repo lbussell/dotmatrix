@@ -76,7 +76,7 @@ public record CpuTestData(
                 .FromJson(ReadTestDataFile(opcode))
                 .Select(FromModel);
         }
-        catch (FileNotFoundException _)
+        catch (FileNotFoundException)
         {
             return [];
         }

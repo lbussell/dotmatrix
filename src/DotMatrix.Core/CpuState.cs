@@ -34,7 +34,7 @@ public record struct CpuState
     /// <summary>
     /// Interrupt enable
     /// </summary>
-    public bool Ime;
+    public bool InterruptMasterEnable;
 
     /// <summary>
     /// Whether to set Ie after the next instruction

@@ -5,30 +5,42 @@ namespace DotMatrix.Core;
 public class DotMatrixConsole
 {
     private readonly Cpu _cpu;
-    private readonly Bus _bus;
+    private readonly IBus _bus;
 
-    private DotMatrixConsole(Cpu cpu, Bus bus)
+    private DotMatrixConsole(Cpu cpu, IBus bus)
     {
         _cpu = cpu;
         _bus = bus;
     }
 
-    public static DotMatrixConsole CreateInstance(byte[] rom, byte[]? bios = null, bool loggingEnabled = false)
+    public static DotMatrixConsole CreateInstance(
+        byte[] rom,
+        byte[]? bios = null,
+        LoggingType loggingType = LoggingType.None,
+        Action<string>? logAction = null)
     {
-        Bus bus = new(rom, bios);
+        IBus bus = new Bus(rom, bios);
+
+        if (loggingType != LoggingType.None)
+        {
+            logAction ??= Console.WriteLine;
+            if (loggingType == LoggingType.Serial)
+            {
+                bus = new SerialLoggingBus(bus, logAction);
+            }
+        }
 
         OpcodeHandler opcodeHandler = new();
-
         Cpu cpu = new(bus, opcodeHandler, CpuState.GetPostBootRomState())
         {
-            LoggingEnabled = loggingEnabled,
+            LoggingEnabled = loggingType == LoggingType.CpuState,
         };
 
         return new DotMatrixConsole(cpu, bus);
     }
 
-    public void Run()
+    public void Run(CancellationToken cancellationToken)
     {
-        _cpu.Run(int.MaxValue);
+        _cpu.Run(cancellationToken);
     }
 }

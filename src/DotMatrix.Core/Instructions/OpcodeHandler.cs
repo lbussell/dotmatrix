@@ -223,7 +223,7 @@ public class OpcodeHandler : IOpcodeHandler
                 break;
 
             case 0xF3:
-                state.Ime = false;
+                state.InterruptMasterEnable = false;
                 break;
             case 0xFB:
                 state.SetImeNext = true;
@@ -238,7 +238,7 @@ public class OpcodeHandler : IOpcodeHandler
 
         if (setIme)
         {
-            state.Ime = true;
+            state.InterruptMasterEnable = true;
             state.SetImeNext = false;
         }
     }
@@ -580,7 +580,7 @@ public class OpcodeHandler : IOpcodeHandler
         state.IncrementMCycles(2);
     }
 
-    private static void PushInternal(ref CpuState state, IBus bus, ushort value)
+    internal static void PushInternal(ref CpuState state, IBus bus, ushort value)
     {
         bus[--state.Sp] = Hi(value);
         bus[--state.Sp] = Lo(value);

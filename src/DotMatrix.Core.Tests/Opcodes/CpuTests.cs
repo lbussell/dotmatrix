@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using DotMatrix.Core.Instructions;
 
 namespace DotMatrix.Core.Tests;
@@ -19,13 +18,13 @@ public class CpuTests
         CpuState initialState = testData.Initial.State with { Ir = testData.Opcode };
         Cpu cpu = new(bus, new OpcodeHandler(), initialState);
 
-        cpu.Run(instructions: 1);
+        cpu.Run(CancellationToken.None, instructions: 1);
 
         VerifyCpuLogs(testData.GetCpuLog(), bus.Log);
         cpu.State.Should().BeEquivalentTo(testData.Final.State,
             options => options
                 .Excluding(o => o.Ir)
-                .Excluding(o => o.Ime)
+                .Excluding(o => o.InterruptMasterEnable)
                 .Excluding(o => o.SetImeNext));
     }
 

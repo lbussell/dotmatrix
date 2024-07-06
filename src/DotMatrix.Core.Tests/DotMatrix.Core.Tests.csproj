@@ -28,14 +28,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="Opcodes\CpuTestData\v2\*.json">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Blargg\" />
+        <Content Include="Opcodes\CpuTestData\v2\*.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Blargg\Roms\**\*.gb">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
 </Project>
