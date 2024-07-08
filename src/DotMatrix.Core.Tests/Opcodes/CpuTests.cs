@@ -1,15 +1,14 @@
 using DotMatrix.Core.Instructions;
 
-namespace DotMatrix.Core.Tests;
+namespace DotMatrix.Core.Tests.Opcodes;
 
-public class CpuTests
+public sealed class CpuTests
 {
     // Uncomment to test specific opcodes for easier debugging
     // public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData([ 0xCD ], "cd 02 0d");
 
     // Test all opcodes
-    public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData(GetImplementedOpcodes());
-    private static IEnumerable<int> GetImplementedOpcodes() => Util.GetImplementedOpcodesList();
+    public static IEnumerable<object[]> GetTestData() => CpuTestData.GetTestData();
 
     private static void ExecuteTest(CpuTestData testData)
     {
@@ -41,5 +40,12 @@ public class CpuTests
 
     [Theory]
     [MemberData(nameof(GetTestData))]
-    public void OpcodeTest(CpuTestData testData) => ExecuteTest(testData);
+    public void OpcodeTest(byte opcode)
+    {
+        IEnumerable<CpuTestData> tests = CpuTestData.GetTestDataForOpcode(opcode);
+        foreach (CpuTestData test in tests)
+        {
+            ExecuteTest(test);
+        }
+    }
 }

@@ -1,8 +1,10 @@
-namespace DotMatrix.Core.Tests;
+namespace DotMatrix.Core.Tests.Opcodes;
 
 internal class LoggingBus : IBus
 {
     private readonly IDictionary<ushort, byte> _memory;
+
+    public ITimer Timer { get; } = new MockTimer();
 
     public LoggingBus(IEnumerable<int[]> ram)
     {
@@ -26,12 +28,16 @@ internal class LoggingBus : IBus
         if (!_memory.TryGetValue(address, out byte value)) return 0;
         Log.Add(new CpuLog(address, value, ActivityType.Read));
         return value;
-
     }
 
     private void SetInternal(ushort address, byte value)
     {
         _memory[address] = value;
         Log.Add(new CpuLog(address, value, ActivityType.Write));
+    }
+
+    private class MockTimer : ITimer
+    {
+        public void TickTCycles(int numTCycles) { }
     }
 }

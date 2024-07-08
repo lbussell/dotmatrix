@@ -1,9 +1,9 @@
 using System.Text.Json.Nodes;
 using DotMatrix.Core.Tests.Model;
 
-namespace DotMatrix.Core.Tests;
+namespace DotMatrix.Core.Tests.Opcodes;
 
-public record CpuTestData(
+public sealed record CpuTestData(
     string Name,
     CpuTestState Initial,
     CpuTestState Final,
@@ -27,17 +27,36 @@ public record CpuTestData(
             return new CpuLog(address, value, type);
         });
 
-    public static IEnumerable<object[]> GetTestData(IEnumerable<int> opcodes, string? name = null)
+    // Get all the opcodes for which there is a test file
+    public static IEnumerable<object[]> GetTestData()
     {
-        IEnumerable<CpuTestData> tests = GetTestDataInternal(opcodes);
-
-        if (name != null)
-        {
-            tests = tests.Where(td => td.Name == name);
-        }
-
-        return tests.Select(testData => new object[] { testData });
+        return GetTestDataInternal().Select(td => new object[] { td });
     }
+
+    public static IEnumerable<CpuTestData> GetTestDataForOpcode(byte opcode)
+    {
+        var testData = ReadTestDataFromFile(opcode) ?? [];
+        return testData.Select(td => td with { Opcode = opcode });
+    }
+
+    private static IEnumerable<byte> GetTestDataInternal()
+    {
+        return Enumerable.Range(0x00, 0xFF)
+            .Select(op => (byte)op)
+            .Where(op => File.Exists(GetTestFilePath(op)));
+    }
+
+    // public static IEnumerable<object[]> GetTestData(byte opcode)
+    // {
+    //     IEnumerable<CpuTestData> tests = GetTestDataInternal(opcodes);
+    //
+    //     if (name != null)
+    //     {
+    //         tests = tests.Where(td => td.Name == name);
+    //     }
+    //
+    //     return tests.Select(testData => new object[] { testData });
+    // }
 
     private static CpuTestData FromModel(CpuTestDataModel model)
     {
@@ -59,14 +78,8 @@ public record CpuTestData(
     private static IEnumerable<CpuTestData> GetTestDataInternal(IEnumerable<int> opcodes) =>
         opcodes
             .Select(o => (byte)o)
-            .Select(GetTestDataInternal)
+            .Select(GetTestDataForOpcode)
             .SelectMany(td => td);
-
-    private static IEnumerable<CpuTestData> GetTestDataInternal(byte opcode)
-    {
-        var testData = ReadTestDataFromFile(opcode) ?? [];
-        return testData.Select(td => td with { Opcode = opcode });
-    }
 
     private static IEnumerable<CpuTestData> ReadTestDataFromFile(byte opcode)
     {
@@ -83,5 +96,10 @@ public record CpuTestData(
     }
 
     private static string ReadTestDataFile(byte opcode) =>
-        File.ReadAllText(Path.Combine(TestDataDir, $"{opcode:x2}.json"));
+        File.ReadAllText(GetTestFilePath(opcode));
+
+    private static string GetTestFilePath(byte opcode)
+    {
+        return Path.Combine(TestDataDir, $"{opcode:x2}.json");
+    }
 }

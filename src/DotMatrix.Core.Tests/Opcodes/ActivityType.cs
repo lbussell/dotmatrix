@@ -1,3 +1,3 @@
-namespace DotMatrix.Core.Tests;
+namespace DotMatrix.Core.Tests.Opcodes;
 
 public enum ActivityType { Read, Write }

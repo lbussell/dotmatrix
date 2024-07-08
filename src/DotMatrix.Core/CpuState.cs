@@ -41,7 +41,7 @@ public record struct CpuState
     /// </summary>
     public bool SetImeNext;
 
-    public long TCycles;
+    public ulong TCycles;
 
     /// <summary>
     /// 16-bit combination of registers A and F
@@ -117,7 +117,7 @@ public record struct CpuState
 
     public void IncrementMCycles(int numberOfMCycles = 1)
     {
-        TCycles += MCycleLength * numberOfMCycles;
+        TCycles += (ulong)(MCycleLength * numberOfMCycles);
     }
 
     public bool GetCondition(byte value)

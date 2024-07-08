@@ -8,6 +8,8 @@ internal sealed class SerialLoggingBus(IBus innerBus, Action<string> log) : IBus
     private readonly Action<string> _log = log;
     private readonly StringBuilder _logBuffer = new();
 
+    public ITimer Timer => _innerBus.Timer;
+
     public byte this[ushort address]
     {
         get => _innerBus[address];

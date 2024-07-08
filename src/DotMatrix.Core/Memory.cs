@@ -2,14 +2,18 @@ namespace DotMatrix.Core;
 
 internal static class Memory
 {
-    public const int Size = 0xFFFF;
+    public const int Size = 0x10000;
     public const int BootRom = 0x0000;
     public const int BootRomEnd = 0x00FF;
     public const int ExecutionStart = 0x0100;
     public const int RomBank00 = 0x0000;
     public const int RomBank01NN = 0x4000;
     public const int RomBankEnd = 0x7FFF;
-    public const int IORegisters = 0xFF00;
+    public const int IOReg = 0xFF00;
+    public const int IORegEnd = 0xFF7F;
+    public const int HRam = 0xFF80;
+    public const int HRamEnd = 0xFFFE;
+    public const int InterruptEnable = 0xFFFF;
 
     #region I/O Registers
     public const int P1 = 0xFF00; // Joypad
@@ -18,6 +22,7 @@ internal static class Memory
     #endregion
 
     #region Timer Registers
+    public const int TimerRegisters = DIV;
     public const int DIV = 0xFF04;
     public const int TIMA = 0xFF05;
     public const int TMA = 0xFF06;
@@ -25,7 +30,6 @@ internal static class Memory
     #endregion
 
     #region Interrupts
-    public const ushort InterruptEnable = 0xFFFF;
     public const ushort InterruptFlag = 0xFF0F;
 
     public static readonly ushort[] Interrupts =

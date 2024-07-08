@@ -8,7 +8,7 @@ class Program
     {
         // byte[] bios = File.ReadAllBytes(args[0]);
         byte[] rom = File.ReadAllBytes(args[0]);
-        DotMatrixConsole console = DotMatrixConsole.CreateInstance(rom, bios: null, LoggingType.Serial);
+        DotMatrixConsole console = DotMatrixConsole.CreateInstance(rom, bios: null, LoggingType.CpuState);
         console.Run(CancellationToken.None);
     }
 }

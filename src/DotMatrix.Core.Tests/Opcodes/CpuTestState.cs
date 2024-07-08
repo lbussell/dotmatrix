@@ -1,6 +1,6 @@
-namespace DotMatrix.Core.Tests;
-
 using DotMatrix.Core.Tests.Model;
+
+namespace DotMatrix.Core.Tests.Opcodes;
 
 public record CpuTestState(CpuState State, int[][] Ram)
 {
@@ -18,7 +18,7 @@ public record CpuTestState(CpuState State, int[][] Ram)
                 L = model.L,
                 Pc = (ushort)(model.Pc - 1),
                 Sp = model.Sp,
-                TCycles = tCycles,
+                TCycles = (ulong)tCycles,
             },
             model.Ram
         );
