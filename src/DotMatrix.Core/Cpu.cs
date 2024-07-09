@@ -22,6 +22,7 @@ internal class Cpu
 
     public void Run(CancellationToken cancellationToken, int instructions = int.MaxValue)
     {
+        LogState();
         for (int i = 0; i < instructions; i += 1)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -29,7 +30,6 @@ internal class Cpu
                 return;
             }
 
-            LogState();
             Step();
         }
     }
@@ -41,46 +41,40 @@ internal class Cpu
     {
         ulong previousTCycles = _state.TCycles;
 
-        StepInternal();
+        _state.Pc += 1;
+        _opcodeHandler.HandleOpcode(ref _state, _bus);
+        _state.Ir = Fetch();
+
         if (_state.NextInstructionCb)
         {
             // Run the next instruction immediately if it's a CB-prefix instruction
-            StepInternal();
+            _state.Pc += 1;
+            _opcodeHandler.HandleOpcode(ref _state, _bus);
         }
 
-        _bus.Timer.TickTCycles((int)(_state.TCycles - previousTCycles));
-    }
-
-    private void StepInternal()
-    {
-        bool _ = HandleInterrupts();
-        _state.Pc += 1;
-        // if (!handledInterrupt)
-        // {
-            // Opcode handler is responsible for incrementing the T-cycles.
-            // A typical decode-execute-fetch loop takes 4 T-Cycles (1 M-Cycle) for most instructions
-            // If an instruction takes more time than that, it will also happen during the HandleOpcode call
-            _opcodeHandler.HandleOpcode(ref _state, _bus);
-        // }
-
-        // The fetch happens simultaneously with the last M-Cycle of an instruction
-        // So don't add to cycles here since it was already accounted for in the instruction
+        LogState();
+        HandleInterrupts();
         _state.Ir = Fetch();
+
+        _bus.Timer.TickTCycles((int)(_state.TCycles - previousTCycles));
     }
 
     /**
      * Returns true if we jumped due to an interrupt this cycle
      */
-    private bool HandleInterrupts()
+    private void HandleInterrupts()
     {
-        if (!_state.InterruptMasterEnable) return false;
+        if (!_state.InterruptMasterEnable)
+        {
+            return;
+        }
 
         byte interruptFlag = _bus[Memory.InterruptFlag];
         byte interruptEnable = _bus[Memory.InterruptEnable];
 
         if ((interruptFlag & interruptEnable) == 0)
         {
-            return false;
+            return;
         }
 
         // Handle interrupts in priority order
@@ -100,12 +94,9 @@ internal class Cpu
                 _state.IncrementMCycles(2);
                 _state.Pc = Memory.Interrupts[i];
                 _state.IncrementMCycles();
-
-                return true;
+                return;
             }
         }
-
-        return false;
     }
 
     private byte Fetch()
