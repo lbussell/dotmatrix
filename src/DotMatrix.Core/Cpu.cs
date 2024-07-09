@@ -43,11 +43,11 @@ internal class Cpu
 
         _state.Pc += 1;
         _opcodeHandler.HandleOpcode(ref _state, _bus);
-        _state.Ir = Fetch();
 
         if (_state.NextInstructionCb)
         {
             // Run the next instruction immediately if it's a CB-prefix instruction
+            _state.Ir = Fetch();
             _state.Pc += 1;
             _opcodeHandler.HandleOpcode(ref _state, _bus);
         }
