@@ -41,6 +41,8 @@ public record struct CpuState
     /// </summary>
     public bool SetImeNext;
 
+    public bool IsHalted;
+
     public ulong TCycles;
 
     /// <summary>

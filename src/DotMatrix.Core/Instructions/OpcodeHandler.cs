@@ -101,7 +101,8 @@ public class OpcodeHandler : IOpcodeHandler
                 break;
 
             case 0x76:
-                throw new NotImplementedException("Halt");
+                Halt(ref state);
+                break;
             case >= 0x40 and <= 0x7F:
                 Load8Block1(ref state, bus);
                 break;
@@ -231,9 +232,6 @@ public class OpcodeHandler : IOpcodeHandler
 
             case 0xD3 or 0xDB or 0xDD or 0xE3 or 0xE4 or 0xEB or 0xEC or 0xED or 0xF4 or 0xFC or 0xFD:
                 throw new Exception($"Unsupported opcode {state.Ir}");
-
-            default:
-                throw new NotImplementedException($"Unexpected opcode {state.Ir}");
         }
 
         if (setIme)
@@ -244,6 +242,11 @@ public class OpcodeHandler : IOpcodeHandler
     }
 
     #region Control
+
+    private static void Halt(ref CpuState state)
+    {
+        state.IsHalted = true;
+    }
 
     private const byte Cond = 0b_0001_1000;
 

@@ -14,13 +14,20 @@ public sealed class CpuTests
     {
         // Set up CPU
         LoggingBus bus = new(testData.Initial.Ram);
-        CpuState initialState = testData.Initial.State with { Ir = testData.Opcode };
-        Cpu cpu = new(bus, new OpcodeHandler(), initialState);
+        CpuState initialState = testData.Initial.State with
+        {
+            Ir = testData.Opcode,
+            Pc = (ushort)(testData.Initial.State.Pc + 1),
+        };
 
+        Cpu cpu = new(bus, new OpcodeHandler(), initialState);
         cpu.Run(CancellationToken.None, instructions: 1);
 
         VerifyCpuLogs(testData.GetCpuLog(), bus.Log);
-        cpu.State.Should().BeEquivalentTo(testData.Final.State,
+
+        // Control for post-increment
+        CpuState finalState = cpu.State with { Pc = (ushort)(cpu.State.Pc - 1) };
+        finalState.Should().BeEquivalentTo(testData.Final.State,
             options => options
                 .Excluding(o => o.Ir)
                 .Excluding(o => o.InterruptMasterEnable)
