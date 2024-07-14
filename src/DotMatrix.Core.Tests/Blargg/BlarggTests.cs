@@ -4,7 +4,7 @@ public class BlarggTests
 {
     private const string BlarggTestDataDir = "Blargg/Roms";
 
-    public static IEnumerable<object[]> GetBlarggTestData() =>
+    public static IEnumerable<object[]> GetCpuInstrsTestData() =>
     [
         ["cpu_instrs/individual/01-special.gb"],
         ["cpu_instrs/individual/02-interrupts.gb"],
@@ -20,8 +20,26 @@ public class BlarggTests
     ];
 
     [Theory]
-    [MemberData(nameof(GetBlarggTestData))]
+    [MemberData(nameof(GetCpuInstrsTestData))]
     public void CpuInstrs(string romPath) => ExecuteTest(GetBlarggRomData(romPath));
+
+    [Fact]
+    public void InstrTiming() => ExecuteTest(GetBlarggRomData("instr_timing/instr_timing.gb"));
+
+    // [Fact]
+    public void InterruptTime() => ExecuteTest(GetBlarggRomData("interrupt_time/interrupt_time.gb"));
+
+    // [Fact]
+    public void HaltBug() => ExecuteTest(GetBlarggRomData("halt_bug.gb"));
+
+    [Theory]
+    [InlineData("mem_timing/individual/01-read_timing.gb")]
+    [InlineData("mem_timing/individual/02-write_timing.gb")]
+    [InlineData("mem_timing/individual/03-modify_timing.gb")]
+    // [InlineData("mem_timing-2/rom_singles/01-read_timing.gb")]
+    // [InlineData("mem_timing-2/rom_singles/02-write_timing.gb")]
+    // [InlineData("mem_timing-2/rom_singles/03-modify_timing.gb")]
+    public void MemTiming(string romPath) => ExecuteTest(GetBlarggRomData(romPath));
 
     private static void ExecuteTest(byte[] rom)
     {
