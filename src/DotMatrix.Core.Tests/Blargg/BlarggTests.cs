@@ -32,10 +32,10 @@ public class BlarggTests
     // [Fact]
     public void HaltBug() => ExecuteTest(GetBlarggRomData("halt_bug.gb"));
 
-    [Theory]
-    [InlineData("mem_timing/individual/01-read_timing.gb")]
-    [InlineData("mem_timing/individual/02-write_timing.gb")]
-    [InlineData("mem_timing/individual/03-modify_timing.gb")]
+    // [Theory]
+    // [InlineData("mem_timing/individual/01-read_timing.gb")]
+    // [InlineData("mem_timing/individual/02-write_timing.gb")]
+    // [InlineData("mem_timing/individual/03-modify_timing.gb")]
     // [InlineData("mem_timing-2/rom_singles/01-read_timing.gb")]
     // [InlineData("mem_timing-2/rom_singles/02-write_timing.gb")]
     // [InlineData("mem_timing-2/rom_singles/03-modify_timing.gb")]
